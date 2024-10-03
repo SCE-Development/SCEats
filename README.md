@@ -1,0 +1,2 @@
+# SCEats
+Snack inventory management
