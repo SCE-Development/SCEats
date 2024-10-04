@@ -15,21 +15,45 @@ const (
 	Buy
 )
 
-func addItem(barcode_num string) {
-	// TODO: Make an API call that adds the item to the inventory
-	// We can pass the product info in the request body
-	productInfo, err := getProductInfo(barcode_num)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("Adding", productInfo["name"])
-	}
+func (c *food_items) addItem(barcode_num string) error {
+    productInfo, err := getProductInfo(barcode_num)
+    if err != nil {
+        return fmt.Errorf("failed to get product info: %v", err)
+    }
+
+    name := productInfo["name"].(string)
+    // figure out price later
+    price := 0.0
+    // set initial quantity, +1 quantity is in prepare logic
+    quantity := 1
+    // assume no photo url
+    photo := productInfo["photo"].(string)
+
+    stmt, err := c.db.Prepare(`
+        INSERT INTO food_items (barcode, name, price, quantity, photo)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(barcode) DO UPDATE SET
+        quantity = quantity + 1
+    `)
+    if err != nil {
+        return fmt.Errorf("failed to prepare SQL statement: %v", err)
+    }
+    defer stmt.Close()
+
+    _, err = stmt.Exec(barcode_num, name, price, quantity, photo)
+    if err != nil {
+        return fmt.Errorf("failed to execute SQL statement: %v", err)
+    }
+
+    fmt.Printf("Added/Updated item: %s (Barcode: %s)\n", name, barcode_num)
+    return nil
 }
 
-func buyItem(barcode_num string) {
+func (c *food_items) buyItem(barcode_num string) error {
 	// TODO: Make an API call that purchases the item from the inventory
 	// We only need the barcode number because it will be the primary key in DB
 	fmt.Println("Buying barcode:", barcode_num)
+	return nil
 }
 
 func getProductInfo(barcode_num string) (map[string]interface{}, error) {
@@ -65,6 +89,7 @@ func getProductInfo(barcode_num string) (map[string]interface{}, error) {
 		"brand":      getString(product, "brands"),
 		"name":       getString(product, "product_name"),
 		"nutriments": getNutriments(product),
+		"photo": 	  getString(product, "image_front_url"),
 	}
 
 	return specificInfo, nil
@@ -88,6 +113,13 @@ func getNutriments(product map[string]interface{}) map[string]interface{} {
 
 func main() {
 
+	foodItems, err := initDB()
+	if err != nil {
+		fmt.Print("Couldn't initialize db: %v\n", err)
+		return
+	}
+	defer foodItems.db.Close()
+
 	var mode = Buy
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -102,9 +134,16 @@ func main() {
 			fmt.Println("Switching to BUY mode")
 		} else {
 			if mode == Add {
-				addItem(barcode_num)
+				err := foodItems.addItem(barcode_num)
+				if err != nil {
+					fmt.Printf("Error adding item: %v\n", err)
+				}
+
 			} else if mode == Buy {
-				buyItem(barcode_num)
+				err := foodItems.buyItem(barcode_num)
+				if err != nil {
+					fmt.Printf("Error buying item(s): %v\n", err)
+				}
 			}
 		}
 	}
