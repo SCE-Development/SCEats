@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -50,10 +51,32 @@ func (c *food_items) addItem(barcode_num string) error {
 }
 
 func (c *food_items) buyItem(barcode_num string) error {
-	// TODO: Make an API call that purchases the item from the inventory
-	// We only need the barcode number because it will be the primary key in DB
-	fmt.Println("Buying barcode:", barcode_num)
-	return nil
+    stmt, err := c.db.Prepare(`
+        UPDATE food_items
+        SET quantity = quantity - 1
+        WHERE barcode = ? AND quantity > 0
+    `)
+    if err != nil {
+        return fmt.Errorf("failed to prepare SQL statement: %v", err)
+    }
+    defer stmt.Close()
+
+    result, err := stmt.Exec(barcode_num)
+    if err != nil {
+        return fmt.Errorf("failed to execute SQL statement: %v", err)
+    }
+
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return fmt.Errorf("failed to get rows affected: %v", err)
+    }
+
+    if rowsAffected == 0 {
+        return fmt.Errorf("item not found or out of stock")
+    }
+
+    fmt.Printf("Bought item with barcode: %s\n", barcode_num)
+    return nil
 }
 
 func getProductInfo(barcode_num string) (map[string]interface{}, error) {
@@ -115,7 +138,7 @@ func main() {
 
 	foodItems, err := initDB()
 	if err != nil {
-		fmt.Print("Couldn't initialize db: %v\n", err)
+		fmt.Printf("Couldn't initialize db: %v\n", err)
 		return
 	}
 	defer foodItems.db.Close()

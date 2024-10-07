@@ -16,11 +16,11 @@ func initDB() (*food_items, error) {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS food_items (
-	  barcode INTEGER,
+	  barcode INTEGER UNIQUE,
 	  name TEXT,
 	  price REAL,
 	  quantity INTEGER,
-	  photo TEXT,
+	  photo TEXT
 	)`)
 
 	if err != nil {
