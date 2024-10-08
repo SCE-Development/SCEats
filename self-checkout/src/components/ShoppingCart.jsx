@@ -1,13 +1,31 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 export default function ShoppingCart() {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState({});
   const [currentInput, setCurrentInput] = useState('');
 
   const addItem = useCallback((itemName) => {
-    const price = Number((Math.random() * 50 + 1).toFixed(2));
-    setItems(prevItems => [...prevItems, { name: itemName, price }]);
-  }, []);
+    console.log(items);
+    if (itemName in items) {
+      setItems(prev => ({
+        ...prev, 
+        [itemName]: {
+          ...prev[itemName], 
+          quantity: prev[itemName].quantity + 1
+        }
+      }));
+    } else {
+      const price = Number((Math.random() * 50 + 1).toFixed(2));
+      setItems(prev => ({
+        ...prev, 
+        [itemName]: {
+          name: itemName, 
+          price: price, 
+          quantity: 1
+        }
+      }));
+    }
+  }, [items]);
 
   const handleKeyDown = useCallback((event) => {
     if (event.key === 'Enter' && currentInput.trim() !== '') {
@@ -25,7 +43,7 @@ export default function ShoppingCart() {
     };
   }, [handleKeyDown]);
 
-  const total = items.reduce((sum, item) => sum + item.price, 0);
+  const total = Object.values(items).reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
     <div className="w-full rounded-lg px-3 h-full max-h-[82vh] flex flex-col items-center">
@@ -35,10 +53,14 @@ export default function ShoppingCart() {
       </div>
 
       <div className="flex-grow w-full px-3 pt-3 bg-base-200 overflow-y-auto">
-        {items.map((item, index) => (
+        {Object.keys(items).map((item, index) => (
           <div key={index} className="mb-3 p-3 rounded-md shadow">
-            <span className="font-medium">{item.name}</span>
-            <span className="float-right text-success">${item.price.toFixed(2)}</span>
+            <span className="font-medium">
+              {items[item].name} 
+              <br/> 
+              <span className="text-sm text-muted">Quantity: {items[item].quantity}</span>
+            </span>
+            <span className="float-right text-success">${items[item].price.toFixed(2)}</span>
           </div>
         ))}
       </div>
