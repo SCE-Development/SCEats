@@ -90,7 +90,7 @@ export default function ShoppingCart() {
   return (
     <div className="w-full px-3 h-[80vh] flex items-center gap-3">
       <div className="w-2/3 h-full rounded-lg flex flex-col items-center">
-        <div className="w-full rounded-t-lg p-6 bg-secondary text-center">
+        <div className="w-full rounded-t-lg p-6 bg-primary text-center text-primary-content">
           <h2 className="text-2xl font-bold">Shopping Cart</h2>
         </div>
         <div className="flex-grow w-full px-3 pt-3 bg-base-200 overflow-y-auto rounded-b-lg">
