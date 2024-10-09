@@ -1,36 +1,12 @@
-package main
+package backend
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"strings"
+	_ "github.com/mattn/go-sqlite3"
 )
-
-const (
-	Add = iota
-	Buy
-)
-
-func addItem(barcode_num string) {
-	// TODO: Make an API call that adds the item to the inventory
-	// We can pass the product info in the request body
-	productInfo, err := getProductInfo(barcode_num)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("Adding", productInfo["name"])
-	}
-}
-
-func buyItem(barcode_num string) {
-	// TODO: Make an API call that purchases the item from the inventory
-	// We only need the barcode number because it will be the primary key in DB
-	fmt.Println("Buying barcode:", barcode_num)
-}
 
 func getProductInfo(barcode_num string) (map[string]interface{}, error) {
 	url := "https://world.openfoodfacts.org/api/v0/product/" + barcode_num + ".json"
@@ -65,6 +41,7 @@ func getProductInfo(barcode_num string) (map[string]interface{}, error) {
 		"brand":      getString(product, "brands"),
 		"name":       getString(product, "product_name"),
 		"nutriments": getNutriments(product),
+		"photo": 	  getString(product, "image_front_url"),
 	}
 
 	return specificInfo, nil
@@ -84,32 +61,4 @@ func getNutriments(product map[string]interface{}) map[string]interface{} {
 		return nutriments
 	}
 	return make(map[string]interface{})
-}
-
-func main() {
-
-	var mode = Buy
-	scanner := bufio.NewScanner(os.Stdin)
-
-	for scanner.Scan() {
-		barcode_num := scanner.Text()
-		// Check if the text contains the add or buy strings and set the mode accordingly
-		if strings.Contains(barcode_num, "sceaddsnacks") {
-			fmt.Println("Switching to ADD mode")
-			mode = Add
-		} else if strings.Contains(barcode_num, "scebuysnacks") {
-			mode = Buy
-			fmt.Println("Switching to BUY mode")
-		} else {
-			if mode == Add {
-				addItem(barcode_num)
-			} else if mode == Buy {
-				buyItem(barcode_num)
-			}
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error:", err)
-	}
 }
