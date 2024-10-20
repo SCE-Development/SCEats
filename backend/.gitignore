@@ -1,0 +1,48 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+
+# Logs
+*.log
+
+# Dependency directories (for vendoring)
+vendor/
+
+# Compiled object files
+*.o
+*.a
+*.lo
+*.la
+*.lai
+*.so
+
+# Go test binary
+*.test
+
+# Coverage files
+*.cover
+
+# Editor backups, caches, and miscellaneous files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Configuration/environment files
+.env
+
+# Build directories
+bin/
+build/
+dist/
+
+# Go module files (use 'go mod tidy' to manage)
+go.sum
+go.mod
+
+# IDE specific directories
+.vscode/
+.idea/
