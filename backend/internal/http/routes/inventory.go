@@ -15,9 +15,6 @@ func UseItemRoutes(router *gin.RouterGroup, food *database.FoodItems) {
 	router.GET("/items/:id", func(c *gin.Context) {
 		HandleGetItem(c, food)
 	})
-	router.POST("/items/:id", func(c *gin.Context) {
-		HandleAddItem(c, food)
-	})
 	router.PUT("/items/:id", func(c *gin.Context) {
 		HandleBuyItem(c, food)
 	})
@@ -29,7 +26,8 @@ func HandleGetAllItems(c *gin.Context, food *database.FoodItems) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, results)
+
+	c.JSON(200, gin.H{"data": results})
 }
 
 func HandleGetItem(c *gin.Context, food *database.FoodItems) {
@@ -39,24 +37,25 @@ func HandleGetItem(c *gin.Context, food *database.FoodItems) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, result)
+	c.JSON(200, gin.H{"data": result})
 
 }
-func HandleAddItem(c *gin.Context, food *database.FoodItems) {
-	id := c.Param("id")
-	err := food.AddItem(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, gin.H{"message": "successfully added item."})
-}
+
 func HandleBuyItem(c *gin.Context, food *database.FoodItems) {
+	var request struct {
+		Amount int `json:"amount"`
+	}
+
 	id := c.Param("id")
-	err := food.BuyItem(id)
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "JSON body of request is malformed"})
+		return
+	}
+
+	err := food.BuyItem(id, request.Amount)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"message": "successfully bought item."})
+	c.JSON(200, gin.H{"message": "successfully bought item " + id})
 }

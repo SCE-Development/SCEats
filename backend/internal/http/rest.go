@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"backend/internal/database"
+	"backend/internal/http/middlewares"
 	"backend/internal/http/routes"
 
 	"github.com/gin-gonic/gin"
@@ -22,9 +23,13 @@ func getPort() string {
 
 func StartREST(food *database.FoodItems) {
 	app := gin.Default()
-	//app.Use(middlewares.Auth())
-	routes.UseCheckoutRoutes(app.Group("/checkout"))
 	routes.UseItemRoutes(app.Group("/inventory"), food)
+	app.POST("/login", routes.HandleLogin)
+
+	app.Use(middlewares.Auth())
+
+	routes.UseAdminRoutes(app.Group("/admin"), food)
+	//routes.UseCheckoutRoutes(app.Group("/checkout"))
 	app.Run(
 		getPort(),
 	)

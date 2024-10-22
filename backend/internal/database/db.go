@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -13,12 +12,83 @@ type FoodItems struct {
 	db *sql.DB
 }
 
-func (c *FoodItems) AddItem(barcode_num string) error {
+func toInt(barcode string) (int64, error) {
+	barcode_int, err := strconv.ParseInt(barcode, 10, 64)
+	if err != nil {
+		return -1, fmt.Errorf("failed to convert to string")
+	}
+	return barcode_int, nil
+}
+
+func retrieveRowData(row interface{}) (interface{}, error) {
+	var name string
+	var barcode int64
+	var price float64
+	var quantity int
+	var photo string
+
+	switch obj := row.(type) {
+	case *sql.Row:
+		// Scan the row values into variables
+		if err := obj.Scan(&barcode, &name, &price, &quantity, &photo); err != nil {
+			return nil, err
+		}
+
+		return map[string]interface{}{
+			"barcode":  barcode,
+			"name":     name,
+			"price":    price,
+			"quantity": quantity,
+			"photo":    photo,
+		}, nil
+
+	case *sql.Rows:
+		defer obj.Close()
+		var results []map[string]interface{}
+		for obj.Next() {
+			if err := obj.Scan(&barcode, &name, &price, &quantity, &photo); err != nil {
+				return nil, err
+			}
+
+			results = append(results, map[string]interface{}{
+				"barcode":  barcode,
+				"name":     name,
+				"price":    price,
+				"quantity": quantity,
+				"photo":    photo,
+			})
+		}
+		return results, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported type: %T", row)
+	}
+}
+
+func (f *FoodItems) prepAddRow() (*sql.Stmt, error) {
+	stmt, err := f.db.Prepare(`
+        INSERT INTO food_items (barcode, name, price, quantity, photo)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(barcode) DO UPDATE SET
+        quantity = quantity + 1
+    `)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare SQL statement: %v", err)
+	}
+	return stmt, nil
+
+}
+
+func (f *FoodItems) AddItem(barcode_num string) error {
 	productInfo, err := GetProductInfo(barcode_num)
 	if err != nil {
 		return fmt.Errorf("failed to get product info: %v", err)
 	}
 
+	n, cantInt := toInt(barcode_num)
+	if cantInt != nil {
+		return cantInt
+	}
 	name := productInfo["name"].(string)
 	// figure out price later
 	price := 0.0
@@ -26,19 +96,13 @@ func (c *FoodItems) AddItem(barcode_num string) error {
 	quantity := 1
 	// assume no photo url
 	photo := productInfo["photo"].(string)
-
-	stmt, err := c.db.Prepare(`
-        INSERT INTO food_items (barcode, name, price, quantity, photo)
-        VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(barcode) DO UPDATE SET
-        quantity = quantity + 1
-    `)
-	if err != nil {
-		return fmt.Errorf("failed to prepare SQL statement: %v", err)
+	stmt, err2 := f.prepAddRow()
+	if err2 != nil {
+		return fmt.Errorf("failed to add row because: %v", err2.Error())
 	}
 	defer stmt.Close()
+	_, err = stmt.Exec(n, name, price, quantity, photo)
 
-	_, err = stmt.Exec(barcode_num, name, price, quantity, photo)
 	if err != nil {
 		return fmt.Errorf("failed to execute SQL statement: %v", err)
 	}
@@ -47,18 +111,38 @@ func (c *FoodItems) AddItem(barcode_num string) error {
 	return nil
 }
 
-func (c *FoodItems) BuyItem(barcode_num string) error {
-	stmt, err := c.db.Prepare(`
+func (f *FoodItems) AddItemManually(barcode_num string, name string, price float64, quantity int, photo string) error {
+	stmt, err := f.prepAddRow()
+
+	n, err := toInt(barcode_num)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(n, name, price, quantity, photo)
+	if err != nil {
+		return fmt.Errorf("failed to execute SQL statement: %v", err)
+	}
+
+	fmt.Printf("Added/Updated item: %s (Barcode: %s)\n", name, barcode_num)
+	return nil
+}
+
+func (f *FoodItems) BuyItem(barcode_num string, amount int) error {
+	stmt, err := f.db.Prepare(`
         UPDATE food_items
-        SET quantity = quantity - 1
+        SET quantity = quantity - ?
         WHERE barcode = ? AND quantity > 0
     `)
 	if err != nil {
 		return fmt.Errorf("failed to prepare SQL statement: %v", err)
 	}
 	defer stmt.Close()
-
-	result, err := stmt.Exec(barcode_num)
+	n, err := toInt(barcode_num)
+	if err != nil {
+		return err
+	}
+	result, err := stmt.Exec(amount, n)
 	if err != nil {
 		return fmt.Errorf("failed to execute SQL statement: %v", err)
 	}
@@ -76,76 +160,60 @@ func (c *FoodItems) BuyItem(barcode_num string) error {
 	return nil
 }
 
-func (f *FoodItems) GetAllItems() (gin.H, error) {
+func (f *FoodItems) GetAllItems() (interface{}, error) {
 	rows, err := f.db.Query("SELECT * from food_items")
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve all of database items")
 	}
-	defer rows.Close()
-
-	// Prepare a slice to hold the results (row data)
-	var foodItems []map[string]interface{}
-
-	// Iterate through the rows
-	for rows.Next() {
-		var name string
-		var barcode int64
-		var price float64
-		var quantity int
-		var photo string
-
-		// Scan the row values into variables
-		if err := rows.Scan(&barcode, &name, &price, &quantity, &photo); err != nil {
-			return nil, err
-		}
-
-		// Append the row data as a map to the foodItems slice
-		foodItems = append(foodItems, map[string]interface{}{
-			"barcode":  barcode,
-			"name":     name,
-			"price":    price,
-			"quantity": quantity,
-			"photo":    photo,
-		})
+	data, err := retrieveRowData(rows)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
 	}
-
-	return gin.H{"data": foodItems}, nil
-
+	return data, nil
 }
 
-func (f *FoodItems) GetItem(bc string) (gin.H, error) {
-	barcode_id, err := strconv.ParseInt(bc, 10, 64)
+func (f *FoodItems) GetItem(barcode_num string) (interface{}, error) {
+	n, err := toInt(barcode_num)
 	if err != nil {
 		return nil, err
 	}
-	row := f.db.QueryRow("SELECT * from food_items WHERE barcode_id = ?", barcode_id)
+	row := f.db.QueryRow("SELECT * from food_items WHERE barcode = ?", n)
+	data, err := retrieveRowData(row)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+	return data, nil
+}
 
-	// Prepare variables to hold the results
-	var name string
-	var barcode int64
-	var price float64
-	var quantity int
-	var photo string
+func (f *FoodItems) DeleteItem(barcode_num string) error {
+	n, err := toInt(barcode_num)
 
-	// Scan the row values into variables
-	read_err := row.Scan(&barcode, &name, &price, &quantity, &photo)
-	if read_err != nil {
-		if read_err == sql.ErrNoRows {
-			// Handle case where no result is found
-			return nil, fmt.Errorf("no item found with barcode_id: %d", barcode_id)
-		}
-		// Return any other error
-		return nil, read_err
+	if err != nil {
+		return err
+	}
+	// Prepare the DELETE statement
+	stmt, err := f.db.Prepare("DELETE FROM food_items WHERE barcode = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	// Execute the DELETE statement
+	result, err := stmt.Exec(n)
+	if err != nil {
+		return err
 	}
 
-	// Return the fetched name and price
-	return gin.H{
-		"barcode":  barcode,
-		"name":     name,
-		"price":    price,
-		"quantity": quantity,
-		"photo":    photo,
-	}, nil
+	// Check if a row was affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("Failed to check affected rows")
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("No item found with that ID")
+	}
+	return nil
 }
 
 func InitDB() (*FoodItems, error) {
@@ -158,7 +226,7 @@ func InitDB() (*FoodItems, error) {
 	  barcode INTEGER UNIQUE,
 	  name TEXT,
 	  price REAL,
-	  quantity INTEGER,
+	  quantity INTEGER CHECK(quantity >= 0),
 	  photo TEXT
 	)`)
 
