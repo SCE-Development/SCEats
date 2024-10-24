@@ -8,10 +8,10 @@ export default function ShoppingCart() {
   const [mode, setMode] = useState('buyMode')
 
   const addItem = useCallback((itemName) => {
-    if (itemName === "buyMode") {
+    if (itemName === "scebuysnacks") {
       setMode("buyMode")
     }
-    else if (itemName === "addMode") {
+    else if (itemName === "sceaddsnacks") {
       setMode("addMode")
     }
     else if (itemName in items) {
