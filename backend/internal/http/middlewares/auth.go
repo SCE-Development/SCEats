@@ -58,7 +58,6 @@ func Auth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
 		c.Next() // Proceed to the next handler if authorized
 	}
 }

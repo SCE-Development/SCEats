@@ -12,14 +12,6 @@ type FoodItems struct {
 	db *sql.DB
 }
 
-func toInt(barcode string) (int64, error) {
-	barcode_int, err := strconv.ParseInt(barcode, 10, 64)
-	if err != nil {
-		return -1, fmt.Errorf("failed to convert to string")
-	}
-	return barcode_int, nil
-}
-
 func retrieveRowData(row interface{}) (interface{}, error) {
 	var name string
 	var barcode int64
@@ -85,17 +77,17 @@ func (f *FoodItems) AddItem(barcode_num string) error {
 		return fmt.Errorf("failed to get product info: %v", err)
 	}
 
-	n, cantInt := toInt(barcode_num)
-	if cantInt != nil {
-		return cantInt
+	n, err := strconv.ParseInt(barcode_num, 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to convert to string")
 	}
-	name := productInfo["name"].(string)
+	name := productInfo.Name
 	// figure out price later
 	price := 0.0
 	// set initial quantity, +1 quantity is in prepare logic
 	quantity := 1
 	// assume no photo url
-	photo := productInfo["photo"].(string)
+	photo := productInfo.Photo
 	stmt, err2 := f.prepAddRow()
 	if err2 != nil {
 		return fmt.Errorf("failed to add row because: %v", err2.Error())
@@ -114,9 +106,9 @@ func (f *FoodItems) AddItem(barcode_num string) error {
 func (f *FoodItems) AddItemManually(barcode_num string, name string, price float64, quantity int, photo string) error {
 	stmt, err := f.prepAddRow()
 
-	n, err := toInt(barcode_num)
+	n, err := strconv.ParseInt(barcode_num, 10, 64)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert to string")
 	}
 
 	_, err = stmt.Exec(n, name, price, quantity, photo)
@@ -138,9 +130,9 @@ func (f *FoodItems) BuyItem(barcode_num string, amount int) error {
 		return fmt.Errorf("failed to prepare SQL statement: %v", err)
 	}
 	defer stmt.Close()
-	n, err := toInt(barcode_num)
+	n, err := strconv.ParseInt(barcode_num, 10, 64)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert to string")
 	}
 	result, err := stmt.Exec(amount, n)
 	if err != nil {
@@ -173,9 +165,9 @@ func (f *FoodItems) GetAllItems() (interface{}, error) {
 }
 
 func (f *FoodItems) GetItem(barcode_num string) (interface{}, error) {
-	n, err := toInt(barcode_num)
+	n, err := strconv.ParseInt(barcode_num, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert to string")
 	}
 	row := f.db.QueryRow("SELECT * from food_items WHERE barcode = ?", n)
 	data, err := retrieveRowData(row)
@@ -186,10 +178,9 @@ func (f *FoodItems) GetItem(barcode_num string) (interface{}, error) {
 }
 
 func (f *FoodItems) DeleteItem(barcode_num string) error {
-	n, err := toInt(barcode_num)
-
+	n, err := strconv.ParseInt(barcode_num, 10, 64)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert to string")
 	}
 	// Prepare the DELETE statement
 	stmt, err := f.db.Prepare("DELETE FROM food_items WHERE barcode = ?")
@@ -207,11 +198,11 @@ func (f *FoodItems) DeleteItem(barcode_num string) error {
 	// Check if a row was affected
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("Failed to check affected rows")
+		return fmt.Errorf("failed to check affected rows")
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("No item found with that ID")
+		return fmt.Errorf("no item found with that ID")
 	}
 	return nil
 }

@@ -62,6 +62,32 @@ export default function ShoppingCart() {
     });
   }, []);
 
+  const buyItems = useCallback(() => {
+    // display are you sure that's all you want to get?
+
+
+    // go through each item in the shopping cart and access it to update and "buy" the item
+    Object.keys(items).map( async (item) => {
+      const result = await fetch(`http://localhost:8080/inventory/items/${items[item].name}`, {
+        method: "PUT", 
+        headers :{
+          "Content-Type" : "application/json"
+        },
+        body: JSON.stringify({
+          amount : items[item].quantity
+        })
+      })
+
+      const jsonResult = await result.json()
+      console.log(JSON.stringify(jsonResult))
+    })
+
+
+
+  }, [items])
+
+
+
   // const deleteItem = useCallback((itemName) => {
   //   setItems(prev => {
   //     const { [itemName]: _, ...rest } = prev;
@@ -77,6 +103,8 @@ export default function ShoppingCart() {
       setCurrentInput(prev => prev + event.key);
     }
   }, [currentInput, addItem]);
+
+
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -168,7 +196,7 @@ export default function ShoppingCart() {
               <span className="text-2xl font-bold mt-3">Cash</span>
             </label>
           </div>
-          <button type="submit" className="btn btn-success text-2xl w-full p-6 my-3 h-auto rounded-lg">
+          <button type="submit" className="btn btn-success text-2xl w-full p-6 my-3 h-auto rounded-lg" onClick={() => buyItems()}>
             Confirm Purchase
           </button>
         </form>

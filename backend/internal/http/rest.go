@@ -8,6 +8,7 @@ import (
 	"backend/internal/http/middlewares"
 	"backend/internal/http/routes"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,6 +24,12 @@ func getPort() string {
 
 func StartREST(food *database.FoodItems) {
 	app := gin.Default()
+
+	// REMOVE WHEN DONE TESTING!
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost"}
+	app.Use(cors.Default())
+
 	routes.UseItemRoutes(app.Group("/inventory"), food)
 	app.POST("/login", routes.HandleLogin)
 
