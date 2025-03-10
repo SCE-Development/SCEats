@@ -26,6 +26,7 @@ def test_create_snack(client):
     #assert response.status_code == 200
     #assert response.json()['sku'] == "12345"
    # assert response.json()['name'] == "Coke Zero"
+   
     #response = client.post("/api/v1/inventory/snacks", json={"sku": "1629", "name": "Rice Krispy Treat", "quantity": 40})
     #assert response.status_code ==200
    # assert response.json()['sku'] == "1629"
@@ -35,17 +36,6 @@ def test_create_snack(client):
    # assert response.status_code ==200
    # assert response.json()['sku'] == "1629"
    # assert response.json['name'] =='Rice Krispy Treat'
-
-    #create_snack(SnackCreateSchema(sku='4200',name='Gummy Bears', quantity=20)) 
-
-    #response=client.post("/api/v1/inventory/snakcs",json={"sku":"4200","name":"Gummy Bears","quantity":20})
-    #assert response.status_code==200
-    #assert response.json()['sku'] == '4200'
-    #assert response.json['name']=='Gummy Bears'
-
-    
-
-
 
 def test_get_inventory(client):
     """Test retrieving all snacks"""
@@ -82,8 +72,10 @@ def test_update_snack(client):
     assert updated_snack['sku']
 
     assert updated_snack
-
+    
 def test_delete_snack(client):
     #"""Test deleting a snack"""
    response = client.delete(f"/api/v1/inventory/snacks/{'1629'}")
    assert response.status_code == 200  # Not found
+
+

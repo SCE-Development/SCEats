@@ -83,3 +83,5 @@ def test_get_inventory(db):
 
     for i in grab_all_snacks:
         print(i)
+
+

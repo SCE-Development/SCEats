@@ -9,11 +9,13 @@ Handles all HTTP routes related to inventory management:
 
 All routes are prefixed with /api/v1/inventory
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from models.snack import (
     Snack,
     SnackCreateSchema,
-    SnackUpdateSchema
+    SnackUpdateSchema,
+    BulkSnackCreate,
+    BulkSnackResponse
 )
 from models.inventory import InventoryResponse
 from utils.db import (
@@ -21,7 +23,7 @@ from utils.db import (
     get_snack, 
     delete_snack,
     create_snack,
-    update_snack
+    update_snack,create_bulk_items
 )
 
 router = APIRouter()
@@ -47,3 +49,32 @@ async def update_snack_route(sku: str, updates: SnackUpdateSchema):
 @router.delete("/snacks/{sku}", response_model=Snack)
 async def delete_snack_route(sku: str):
     return delete_snack(sku)
+
+
+@router.post("/snacks/bulk",response_model=BulkSnackResponse) 
+async def create_bulk_route(request:BulkSnackCreate):
+    
+    try:
+       #**# if len(bulk) == 1:
+           # raise Exception("Register a snack rather than a bulk")
+       # elif len(bulk)< 0:
+        #    raise Exception("Items inputted needs to be a positive number")
+        #Make a bulk_items variable that takes in the helper function then put that in the Bulk snack response to return it 
+        bulk_items=create_bulk_items(request.items)
+        print(bulk_items)
+
+        
+        if len(request.items) == 1:
+            raise Exception("Register a snack rather than a bulk")
+        elif len(request.items) < 0:
+            raise Exception("Items inputted need to be a positive number")
+       
+        return BulkSnackResponse(
+            success=True,
+            items=bulk_items,
+            error=None
+        )
+        
+    except Exception as e:
+
+        return BulkSnackResponse(success=False,items=None,error=f"Error Processing bulk request:{str(e)}")

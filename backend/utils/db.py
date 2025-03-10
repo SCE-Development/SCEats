@@ -11,7 +11,8 @@ The application uses SQLite for data storage, with the Snack model for data vali
 """
 import os
 import sqlite3
-from models.snack import Snack, SnackCreateSchema, SnackUpdateSchema
+from models.snack import Snack, SnackCreateSchema, SnackUpdateSchema,BulkSnackCreate,BulkSnackResponse
+from typing import List
 
 def get_db_connection(db_file_path:str="data/db.sqlite3"):
     """Creates and returns a SQLite database connection"""
@@ -85,6 +86,35 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
         """, (updates.name, updates.quantity, sku))
         record = cursor.fetchone()
         return Snack(**record)
+
+
+#Bulk Processing function
+def create_bulk_items(bulk_snacks:BulkSnackCreate)-> List[Snack]:
+    """Create a Bulk of snacks in the database"""
+    with get_db_connection() as conn:
+        cursor=conn.cursor()
+
+        snack_data=[(snack.sku,snack.name,snack.quantity) for snack in bulk_snacks]
+       # exisiting_snack="""
+        #    SELECT COUNT(*) FROM snacks WHERE sku = ?
+        #""" # Add RETURNING * 
+        print(snack_data)
+         
+        query="""            
+                        INSERT INTO snacks (sku, name, quantity)
+                        VALUES (?, ?, ?);
+                        """
+            
+        cursor.executemany(query,snack_data)
+        
+        #last_sku_inputted=cursor.lastrowid
+        #cursor.execute("""
+           # SELECT * FROM snacks WHERE sku >?""",(last_sku_inputted-len(snack_data),))
+
+        records = cursor.fetchall()  # fetchall() to get all rows inserted
+        
+        return [Snack(sku=sku, name=name, quantity=quantity) for (sku, name, quantity) in records]
+        #return Snack(**records)
 
 
 # Initialize the database and create tables
