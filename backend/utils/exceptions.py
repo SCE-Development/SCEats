@@ -32,7 +32,7 @@ def get_db_connection(db_file_path:str="data/db.sqlite3"):
         raise ConnectionError(f"Failed to connect to database: {str(e)}")
     
 
-    
+
 def get_snack(sku: str) -> Snack:
     """
     Returns a single snack by SKU
@@ -67,73 +67,74 @@ def get_snack(sku: str) -> Snack:
     except DatabaseError as e:
         raise DatabaseError(f"Database error {sku}: {str(e)}")
     
-def create_snack(sku: str) -> Snack:
-    """
-    Returns a single snack by SKU
+
+# def create_snack(sku: str) -> Snack:
+#     """
+#     Returns a single snack by SKU
     
-    Args:
-        sku: The unique SKU of the snack
+#     Args:
+#         sku: The unique SKU of the snack
         
-    Returns:
-        result
+#     Returns:
+#         result
         
-    Raises:
-        RecordNotFoundError: If no snack with the given SKU exists
-        ConnectionError: If database connection fails
-        DatabaseError: For other database errors
-    """
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM snacks WHERE sku = ?", (sku,))
-            record = cursor.fetchone()
+#     Raises:
+#         RecordNotFoundError: If no snack with the given SKU exists
+#         ConnectionError: If database connection fails
+#         DatabaseError: For other database errors
+#     """
+#     try:
+#         with get_db_connection() as conn:
+#             cursor = conn.cursor()
+#             cursor.execute("SELECT * FROM snacks WHERE sku = ?", (sku,))
+#             record = cursor.fetchone()
             
-            if record is None:
-                raise RecordNotFoundError(f"No snack found with SKU: {sku}")
+#             if record is None:
+#                 raise RecordNotFoundError(f"No snack found with SKU: {sku}")
                 
-            return Snack(**record)
-    except sqlite3.Error as e:
-        raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
-    except RecordNotFoundError as e:
-        raise RecordNotFoundError(f"Snack not found {sku}: {str(e)}")
-    except ConnectionError as e:
-        raise ConnectionError(f"Database error when connecting to database {sku}: {str(e)}")
-    except DatabaseError as e:
-        raise DatabaseError(f"Database error {sku}: {str(e)}")
+#             return Snack(**record)
+#     except sqlite3.Error as e:
+#         raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
+#     except RecordNotFoundError as e:
+#         raise RecordNotFoundError(f"Snack not found {sku}: {str(e)}")
+#     except ConnectionError as e:
+#         raise ConnectionError(f"Database error when connecting to database {sku}: {str(e)}")
+#     except DatabaseError as e:
+#         raise DatabaseError(f"Database error {sku}: {str(e)}")
     
-def update_snack(sku: str) -> Snack:
-    """
-    Returns a single snack by SKU
+# def update_snack(sku: str) -> Snack:
+#     """
+#     Returns a single snack by SKU
     
-    Args:
-        sku: The unique SKU of the snack
+#     Args:
+#         sku: The unique SKU of the snack
         
-    Returns:
-        Snack object
+#     Returns:
+#         Snack object
         
-    Raises:
-        RecordNotFoundError: If no snack with the given SKU exists
-        ConnectionError: If database connection fails
-        DatabaseError: For other database errors
-    """
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM snacks WHERE sku = ?", (sku,))
-            record = cursor.fetchone()
+#     Raises:
+#         RecordNotFoundError: If no snack with the given SKU exists
+#         ConnectionError: If database connection fails
+#         DatabaseError: For other database errors
+#     """
+#     try:
+#         with get_db_connection() as conn:
+#             cursor = conn.cursor()
+#             cursor.execute("SELECT * FROM snacks WHERE sku = ?", (sku,))
+#             record = cursor.fetchone()
             
-            if record is None:
-                raise RecordNotFoundError(f"No snack found with SKU: {sku}")
+#             if record is None:
+#                 raise RecordNotFoundError(f"No snack found with SKU: {sku}")
                 
-            return Snack(**record)
-    except sqlite3.Error as e:
-        raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
-    except RecordNotFoundError as e:
-        raise RecordNotFoundError(f"Snack not found {sku}: {str(e)}")
-    except ConnectionError as e:
-        raise ConnectionError(f"Database error when connecting to database {sku}: {str(e)}")
-    except DatabaseError as e:
-        raise DatabaseError(f"Database error {sku}: {str(e)}")
+#             return Snack(**record)
+#     except sqlite3.Error as e:
+#         raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
+#     except RecordNotFoundError as e:
+#         raise RecordNotFoundError(f"Snack not found {sku}: {str(e)}")
+#     except ConnectionError as e:
+#         raise ConnectionError(f"Database error when connecting to database {sku}: {str(e)}")
+#     except DatabaseError as e:
+#         raise DatabaseError(f"Database error {sku}: {str(e)}")
 
 
     
