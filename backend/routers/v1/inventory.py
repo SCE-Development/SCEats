@@ -24,6 +24,30 @@ from utils.db import (
     update_snack
 )
 
+def raise_internal_error():
+    raise HTTPException(status_code=500, detail=
+                            {
+                                "error": {
+                                    "code": "INTERNAL_SERVER_ERROR",
+                                    "message": "An internal error occured",
+                                }
+                            })
+def raise_not_found_error():
+    raise HTTPException(status_code=404, detail=
+                            {
+                                "error": {
+                                    "code": "NOT_FOUND",
+                                    "message": "Resource not found",
+                                }
+                            })
+def raise_bad_request_error():
+    raise HTTPException(status_code=400, detail=
+                            {
+                                "error": {
+                                    "code": "INVALID INPUT",
+                                    "message": "The Response Model or SKU is invalid",
+                                }
+                            })
 router = APIRouter()
 
 @router.get("/", response_model=InventoryResponse)
@@ -31,22 +55,10 @@ async def get_inventory_route():
     try:
         snacks = get_inventory()
         if not snacks:
-            raise HTTPException(status_code=404, details= {
-                "error": {
-                    "code": "SNACKS_NOT_FOUND",
-                    "message": "No snacks found in the inventory"
-                }
-            })
+            raise_not_found_error()
         return { "snacks": snacks }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=
-                            {
-                                "error": {
-                                    "code": "INTERNAL_SERVER_ERROR",
-                                    "message": "An internal error occured",
-                                }
-                            }
-                            )
+        raise_internal_error()
         
 
 @router.get("/snacks/{sku}", response_model=Snack)
@@ -55,31 +67,15 @@ async def get_snack_route(sku: str):
     try:
         #check input validation (UPDATE THIS WHEN WE HAVE VALIDATION)
         if not sku:
-            raise HTTPException(status_code=400, details={
-                "error": {
-                    "code": "INVALID_SKU",
-                    "message": "SKU does not exist"
-                }
-            })
+            raise_bad_request_error()
         snack = get_snack(sku)
         #check if snack exists
         if not snack:
-            raise HTTPException(status_code=404, details= {
-                    "error": {
-                        "code": "SNACK_NOT_FOUND",
-                        "message": "Snack with SKU {sku} not found"
-                    }
-                })
+            raise_not_found_error()
         return snack
     #check for internal server error
     except Exception as e:
-        raise HTTPException(status_code=500, detail=
-                            {
-                                "error": {
-                                    "code": "INTERNAL_SERVER_ERROR",
-                                    "message": "An internal error occured",
-                                }
-                            })
+        raise_internal_error()
 
 @router.post("/snacks", response_model=Snack)
 async def create_snack_route(snack: SnackCreateSchema):
@@ -89,22 +85,11 @@ async def create_snack_route(snack: SnackCreateSchema):
         snack = create_snack(snack)
         #check if snack exists
         if not snack:
-            raise HTTPException(status_code=400, details= {
-                "error": {
-                    "code": "SNACK_NOT_CREATED",
-                    "message": "Snack could not be created"
-                }
-            })
+            raise_bad_request_error()
         return snack
     #check for internal server error
     except Exception as e:
-        raise HTTPException(status_code=500, detail=
-                            {
-                                "error": {
-                                    "code": "INTERNAL_SERVER_ERROR",
-                                    "message": "An internal error occured",
-                                }
-                            })    
+        raise_internal_error() 
 
 @router.put("/snacks/{sku}", response_model=Snack)
 async def update_snack_route(sku: str, updates: SnackUpdateSchema):
@@ -112,32 +97,16 @@ async def update_snack_route(sku: str, updates: SnackUpdateSchema):
     try:
         #check input validation (UPDATE THIS WHEN WE HAVE VALIDATION)
         if not sku:
-            raise HTTPException(status_code=400, details={
-                "error": {
-                    "code": "INVALID_SKU",
-                    "message": "SKU does not exist"
-                }
-            })
+            raise_bad_request_error()
         
         updated = update_snack(sku, updates)
         #check if snack exists
         if not updated:
-            raise HTTPException(status_code=404, details= {
-                "error": {
-                    "code": "SNACK_NOT_FOUND",
-                    "message": "Snack with SKU {sku} not found"
-                }
-            })
+            raise_not_found_error()
         return updated
     #check for internal server error
     except Exception as e:
-        raise HTTPException(status_code=500, detail=
-                            {
-                                "error": {
-                                    "code": "INTERNAL_SERVER_ERROR",
-                                    "message": "An internal error occured",
-                                }
-                            })
+        raise_internal_error()
     
 @router.delete("/snacks/{sku}", response_model=Snack)
 async def delete_snack_route(sku: str):
@@ -145,28 +114,12 @@ async def delete_snack_route(sku: str):
     try:
         #check input validation (UPDATE THIS WHEN WE HAVE VALIDATION)
         if not sku:
-            raise HTTPException(status_code=400, details={
-                "error": {
-                    "code": "INVALID_SKU",
-                    "message": "SKU does not exist"
-                }
-            })
+            raise_bad_request_error()
         snack = delete_snack(sku)
         #check if snack exists
         if not snack:
-            raise HTTPException(status_code=404, details= {
-                "error": {
-                    "code": "SNACK_NOT_FOUND",
-                    "message": "Snack with SKU {sku} not found"
-                }
-            })
+            raise_not_found_error()
         return snack
     #check for internal server error
     except Exception as e:
-        raise HTTPException(status_code=500, detail=
-                            {
-                                "error": {
-                                    "code": "INTERNAL_SERVER_ERROR",
-                                    "message": "An internal error occured",
-                                }
-                            })
+        raise_internal_error()
