@@ -1,14 +1,16 @@
 // import { useState } from 'react'
 
 import './App.css'
+import Display from './components/display'
 
 function App() {
 
   return (
     <>
-      <div className='text-3xl font-bold'>
+      < Display />
+      {/* <div className='text-3xl font-bold'>
         Pending for changes...
-      </div>
+      </div> */}
     </>
   )
 }
