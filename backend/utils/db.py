@@ -89,32 +89,22 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
 
 
 #Bulk Processing function
-def create_bulk_items(bulk_snacks:BulkSnackCreate)-> List[Snack]:
+def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
     """Create a Bulk of snacks in the database"""
     with get_db_connection() as conn:
         cursor=conn.cursor()
 
-        snack_data=[(snack.sku,snack.name,snack.quantity) for snack in bulk_snacks]
-       # exisiting_snack="""
-        #    SELECT COUNT(*) FROM snacks WHERE sku = ?
-        #""" # Add RETURNING * 
-        print(snack_data)
-         
+        snack_data=[(snack.sku,snack.quantity) for snack in bulk_snacks] 
         query="""            
-                        INSERT INTO snacks (sku, name, quantity)
-                        VALUES (?, ?, ?);
+                        INSERT INTO snacks (sku,quantity,name)
+                        VALUES (?, ?,'');
                         """
-            
+        
         cursor.executemany(query,snack_data)
         
-        #last_sku_inputted=cursor.lastrowid
-        #cursor.execute("""
-           # SELECT * FROM snacks WHERE sku >?""",(last_sku_inputted-len(snack_data),))
-
         records = cursor.fetchall()  # fetchall() to get all rows inserted
-        
-        return [Snack(sku=sku, name=name, quantity=quantity) for (sku, name, quantity) in records]
-        #return Snack(**records)
+        print(records) # Giving me empty list but works in the get response
+        return [Snack(sku=sku,quantity=quantity) for (sku,quantity) in records]
 
 
 # Initialize the database and create tables

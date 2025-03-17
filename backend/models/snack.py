@@ -10,13 +10,17 @@ from pydantic import BaseModel
 # Snack Data Model
 class Snack(BaseModel):
     sku: str
-    name: str
+    name: Optional[str]=None
     quantity: int
+
+    class Config: # make it so the name would be in the response field for the bulk endpoint
+        use_enum_values = True
+        json_encoders = {Optional: lambda v: v if v is not None else ...}
+
 
 # Request model for creating a new snack
 class SnackCreateSchema(BaseModel):
     sku: str
-    name:str
     quantity: Optional[int] = None
     
 # Request model for updating an existing snack
@@ -29,6 +33,5 @@ class BulkSnackCreate(BaseModel):
 
 class BulkSnackResponse(BaseModel):
     success:bool
-    #items:Optional[List[Snack]]=None
     items:Optional[List[Snack]]=None
     error:Optional[str]=None

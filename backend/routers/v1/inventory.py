@@ -9,7 +9,7 @@ Handles all HTTP routes related to inventory management:
 
 All routes are prefixed with /api/v1/inventory
 """
-from fastapi import APIRouter, Response
+from fastapi import APIRouter
 from models.snack import (
     Snack,
     SnackCreateSchema,
@@ -23,7 +23,8 @@ from utils.db import (
     get_snack, 
     delete_snack,
     create_snack,
-    update_snack,create_bulk_items
+    update_snack,
+    create_bulk_items
 )
 
 router = APIRouter()
@@ -55,15 +56,8 @@ async def delete_snack_route(sku: str):
 async def create_bulk_route(request:BulkSnackCreate):
     
     try:
-       #**# if len(bulk) == 1:
-           # raise Exception("Register a snack rather than a bulk")
-       # elif len(bulk)< 0:
-        #    raise Exception("Items inputted needs to be a positive number")
-        #Make a bulk_items variable that takes in the helper function then put that in the Bulk snack response to return it 
         bulk_items=create_bulk_items(request.items)
-        print(bulk_items)
 
-        
         if len(request.items) == 1:
             raise Exception("Register a snack rather than a bulk")
         elif len(request.items) < 0:
@@ -74,7 +68,9 @@ async def create_bulk_route(request:BulkSnackCreate):
             items=bulk_items,
             error=None
         )
-        
     except Exception as e:
-
-        return BulkSnackResponse(success=False,items=None,error=f"Error Processing bulk request:{str(e)}")
+        return BulkSnackResponse(
+            success=False,
+            items=None,
+            error=f"Error Processing bulk request:{str(e)}"
+        )
