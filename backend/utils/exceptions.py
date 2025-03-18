@@ -99,6 +99,9 @@ def create_snack(sku: str,name: str, ) -> Snack:
     except DatabaseError as e:
         raise DatabaseError(f"Database error {sku}: {str(e)}")
     
+
+# TESTING THIS FOR JAYDEN CUZ HE NOT SMART
+
 # def update_snack(sku: str) -> Snack:
 #     """
 #     Returns a single snack by SKU
