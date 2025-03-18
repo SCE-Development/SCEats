@@ -101,6 +101,7 @@ def create_snack(sku: str,name: str, ) -> Snack:
     
 
 # TESTING THIS FOR JAYDEN CUZ HE NOT SMART
+# Test 2.0
 
 # def update_snack(sku: str) -> Snack:
 #     """
