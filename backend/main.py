@@ -15,6 +15,7 @@ import uvicorn
 from routers.v1 import inventory
 
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
