@@ -161,10 +161,20 @@ def create_snack(snack: SnackCreateSchema) -> Snack:
             if existing is not None:
                 raise DuplicateRecordError(f"Snack with SKU {snack.sku} already exists")
             cursor.execute("""
-                INSERT INTO snacks (sku, name, quantity)
-                VALUES (?, ?, ?)
+                INSERT INTO snacks 
+                (sku, name, quantity, price, description, category, photo_url)
+                VALUES 
+                (?, ?, ?, ?, ?, ?, ?)
                 RETURNING *
-            """, (snack.sku, snack.name, snack.quantity if snack.quantity is not None else 1))
+            """, (
+            snack.sku, 
+            snack.name, 
+            snack.quantity if snack.quantity is not None else 1, 
+            snack.price, 
+            snack.description, 
+            snack.category, 
+            snack.photo_url
+        ))
             record = cursor.fetchone()
             return Snack(**record)
     except sqlite3.Error as e:
@@ -192,10 +202,24 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE snacks 
-                SET name = ?, quantity = ?
+                SET 
+                name = ?, 
+                quantity = ?, 
+                price = ?, 
+                description = ?, 
+                category = ?, 
+                photo_url = ?       
                 WHERE sku = ?
                 RETURNING *
-            """, (updates.name, updates.quantity, sku))
+            """, (
+            updates.name, 
+            updates.quantity, 
+            updates.price, 
+            updates.description, 
+            updates.category, 
+            updates.photo_url, 
+            sku
+        ))
             record = cursor.fetchone()
         if record is None:
             raise RecordNotFoundError(f"No snack found with SKU {sku}")
