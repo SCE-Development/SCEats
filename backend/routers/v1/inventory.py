@@ -11,13 +11,6 @@ All routes are prefixed with /api/v1/inventory
 """
 from fastapi import FastAPI
 from fastapi import APIRouter
-from prometheus_client import make_asgi_app
-
-app = FastAPI(debug=False)
-
-metrics_app = make_asgi_app()
-app.mount("/metrics", metrics_app)
-
 
 from models.snack import (
     Snack,
