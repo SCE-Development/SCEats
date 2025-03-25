@@ -32,7 +32,7 @@ def get_db_connection(db_file_path:str="data/db.sqlite3"):
         connection = sqlite3.connect(db_file_path)
         connection.row_factory = sqlite3.Row
         return connection
-    except sqlite3.Error as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError) as e:
         raise ConnectionError(f"Failed to connect to database: {str(e)}")
 
 
@@ -54,7 +54,7 @@ def init_db(db_file_path: str = "data/db.sqlite3"):
             schema = f.read()
         with get_db_connection() as conn:
             conn.executescript(schema)
-    except sqlite3.Error as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError)  as e:
         raise DatabaseInitError(f"Failed to initialize database: {str(e)}")
 
 
@@ -76,7 +76,7 @@ def get_inventory() -> list[Snack]:
             cursor.execute("SELECT * FROM snacks")
             records = cursor.fetchall()
             return [Snack(**record) for record in records]
-    except sqlite3.Error as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
         raise DatabaseError(f"Database error when fetching inventory: {str(e)}")
 
 
@@ -103,7 +103,7 @@ def get_snack(sku: str) -> Snack:
         if record is None:
             raise RecordNotFoundError(f"No snack found with SKU: {sku}" )
         return Snack(**record)
-    except sqlite3.Error as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError, RecordNotFoundError) as e:
         raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
 
 
@@ -134,7 +134,7 @@ def delete_snack(sku: str) -> Snack:
         if record is None:
             raise RecordNotFoundError(f"No snack found with SKU {sku}")
         return Snack(**record)
-    except sqlite3.Error as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError, RecordNotFoundError) as e:
         raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
         
 
@@ -177,7 +177,7 @@ def create_snack(snack: SnackCreateSchema) -> Snack:
         ))
             record = cursor.fetchone()
             return Snack(**record)
-    except sqlite3.Error as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError, DuplicateRecordError) as e:
         raise DatabaseError(f"Database error when fetching snack {snack.sku}: {str(e)}")
 
 
@@ -224,7 +224,7 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
         if record is None:
             raise RecordNotFoundError(f"No snack found with SKU {sku}")
         return Snack(**record)
-    except sqlite3.Error as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError, RecordNotFoundError) as e:
         raise DatabaseError(f"Database error in fetching snack {sku}: {str(e)}")
 
 
