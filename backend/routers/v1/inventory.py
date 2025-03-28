@@ -46,11 +46,10 @@ async def create_snack_route(snack: SnackCreateSchema):
 @router.put("/snacks/{sku}", response_model=Snack)
 async def update_snack_route(sku: str, updates: SnackUpdateSchema):
     return update_snack(sku, updates)
-    
+
 @router.delete("/snacks/{sku}", response_model=Snack)
 async def delete_snack_route(sku: str):
     return delete_snack(sku)
-
 
 @router.post("/snacks/bulk",response_model=BulkSnackResponse) 
 async def create_bulk_route(request:BulkSnackCreate):
@@ -58,11 +57,6 @@ async def create_bulk_route(request:BulkSnackCreate):
     try:
         bulk_items=create_bulk_items(request.items)
 
-        if len(request.items) == 1:
-            raise Exception("Register a snack rather than a bulk")
-        elif len(request.items) < 0:
-            raise Exception("Items inputted need to be a positive number")
-       
         return BulkSnackResponse(
             success=True,
             items=bulk_items,

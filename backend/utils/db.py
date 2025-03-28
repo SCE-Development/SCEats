@@ -97,14 +97,25 @@ def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
         snack_data=[(snack.sku,snack.quantity) for snack in bulk_snacks] 
         query="""            
                         INSERT INTO snacks (sku,quantity,name)
-                        VALUES (?, ?,'');
+                        VALUES (?, ?, '');
                         """
         
         cursor.executemany(query,snack_data)
-        
+    
+
+        # Build the placeholders for the IN clause
+        sku_placeholders = ', '.join('?' for _ in snack_data)
+
+        select_query = f"SELECT sku, quantity, name FROM snacks WHERE sku IN ({sku_placeholders})"
+
+        print(select_query)
+
+        cursor.execute(select_query, tuple([snack[0] for snack in snack_data]))
+
         records = cursor.fetchall()  # fetchall() to get all rows inserted
-        print(records) # Giving me empty list but works in the get response
-        return [Snack(sku=sku,quantity=quantity) for (sku,quantity) in records]
+
+        print(records) 
+        return [Snack(sku=sku,quantity=quantity,name=name) for (sku,quantity,name) in records]
 
 
 # Initialize the database and create tables
