@@ -103,10 +103,10 @@ def get_snack(sku: str) -> Snack:
         if record is None:
             raise RecordNotFoundError(f"No snack found with SKU: {sku}" )
         return Snack(**record)
-    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
-        raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
-    except (RecordNotFoundError) as e:
+    except RecordNotFoundError as e:
         raise RecordNotFoundError(str(e))
+    except Exception as e:
+        raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
 
 
 def delete_snack(sku: str) -> Snack:
@@ -136,10 +136,10 @@ def delete_snack(sku: str) -> Snack:
         if record is None:
             raise RecordNotFoundError(f"No snack found with SKU: {sku}")
         return Snack(**record)
-    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
-        raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
-    except (RecordNotFoundError) as e:
+    except RecordNotFoundError as e:
         raise RecordNotFoundError(str(e))
+    except Exception as e:
+        raise DatabaseError(f"Database error when deleting snack {sku}: {str(e)}")
         
 
 def create_snack(snack: SnackCreateSchema) -> Snack:
@@ -181,10 +181,10 @@ def create_snack(snack: SnackCreateSchema) -> Snack:
         ))
             record = cursor.fetchone()
             return Snack(**record)
-    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
-        raise DatabaseError(f"Database error when fetching snack {snack.sku}: {str(e)}")
-    except (DuplicateRecordError) as e:
+    except DuplicateRecordError as e:
         raise DuplicateRecordError(str(e))
+    except Exception as e:
+        raise DatabaseError(f"Database error when creating snack {snack.sku}: {str(e)}")
 
 
 def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
@@ -230,10 +230,10 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
         if record is None:
             raise RecordNotFoundError(f"No snack found with SKU: {sku}")
         return Snack(**record)
-    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
-        raise DatabaseError(f"Database error in fetching snack {sku}: {str(e)}")
-    except (RecordNotFoundError) as e:
+    except RecordNotFoundError as e:
         raise RecordNotFoundError(str(e))
+    except Exception as e:
+        raise DatabaseError(f"Database error when updating snack {sku}: {str(e)}")
 
 
 
