@@ -103,8 +103,10 @@ def get_snack(sku: str) -> Snack:
         if record is None:
             raise RecordNotFoundError(f"No snack found with SKU: {sku}" )
         return Snack(**record)
-    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError, RecordNotFoundError) as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
         raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
+    except (RecordNotFoundError) as e:
+        raise RecordNotFoundError(str(e))
 
 
 def delete_snack(sku: str) -> Snack:
@@ -132,10 +134,12 @@ def delete_snack(sku: str) -> Snack:
             """, (sku,))
             record = cursor.fetchone()
         if record is None:
-            raise RecordNotFoundError(f"No snack found with SKU {sku}")
+            raise RecordNotFoundError(f"No snack found with SKU: {sku}")
         return Snack(**record)
-    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError, RecordNotFoundError) as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
         raise DatabaseError(f"Database error when fetching snack {sku}: {str(e)}")
+    except (RecordNotFoundError) as e:
+        raise RecordNotFoundError(str(e))
         
 
 def create_snack(snack: SnackCreateSchema) -> Snack:
@@ -177,8 +181,10 @@ def create_snack(snack: SnackCreateSchema) -> Snack:
         ))
             record = cursor.fetchone()
             return Snack(**record)
-    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError, DuplicateRecordError) as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
         raise DatabaseError(f"Database error when fetching snack {snack.sku}: {str(e)}")
+    except (DuplicateRecordError) as e:
+        raise DuplicateRecordError(str(e))
 
 
 def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
@@ -222,10 +228,12 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
         ))
             record = cursor.fetchone()
         if record is None:
-            raise RecordNotFoundError(f"No snack found with SKU {sku}")
+            raise RecordNotFoundError(f"No snack found with SKU: {sku}")
         return Snack(**record)
-    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError, RecordNotFoundError) as e:
+    except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError) as e:
         raise DatabaseError(f"Database error in fetching snack {sku}: {str(e)}")
+    except (RecordNotFoundError) as e:
+        raise RecordNotFoundError(str(e))
 
 
 
