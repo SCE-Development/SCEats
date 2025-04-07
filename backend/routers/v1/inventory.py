@@ -51,11 +51,11 @@ async def update_snack_route(sku: str, updates: SnackUpdateSchema):
 async def delete_snack_route(sku: str):
     return delete_snack(sku)
 
-@router.post("/snacks/bulk",response_model=BulkSnackResponse) 
+@router.post("/snacks/bulk", response_model=BulkSnackResponse) 
 async def create_bulk_route(request:BulkSnackCreate):
     
     try:
-        bulk_items=create_bulk_items(request.items)
+        bulk_items = create_bulk_items(request.items)
 
         return BulkSnackResponse(
             success=True,

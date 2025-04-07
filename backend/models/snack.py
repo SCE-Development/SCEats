@@ -10,7 +10,7 @@ from pydantic import BaseModel
 # Snack Data Model
 class Snack(BaseModel):
     sku: str
-    name: Optional[str]=None
+    name: Optional[str] = None
     quantity: int
 
 # Request model for creating a new snack
@@ -28,5 +28,5 @@ class BulkSnackCreate(BaseModel):
 
 class BulkSnackResponse(BaseModel):
     success:bool
-    items:Optional[List[Snack]]=None
-    error:Optional[str]=None
+    items:Optional[List[Snack]] = None
+    error:Optional[str] = None

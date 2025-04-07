@@ -88,7 +88,7 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
         return Snack(**record)
 
 
-#Bulk Processing function
+# Bulk Processing function
 def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
     """Create a Bulk of snacks in the database"""
     with get_db_connection() as conn:
@@ -102,19 +102,15 @@ def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
         
         cursor.executemany(query,snack_data)
     
-
         # Build the placeholders for the IN clause
         sku_placeholders = ', '.join('?' for _ in snack_data)
 
         select_query = f"SELECT sku, quantity, name FROM snacks WHERE sku IN ({sku_placeholders})"
 
-        print(select_query)
-
         cursor.execute(select_query, tuple([snack[0] for snack in snack_data]))
 
         records = cursor.fetchall()  # fetchall() to get all rows inserted
 
-        print(records) 
         return [Snack(sku=sku,quantity=quantity,name=name) for (sku,quantity,name) in records]
 
 
