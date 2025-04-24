@@ -8,6 +8,7 @@ Initializes the FastAPI application with:
 
 The application serves the inventory management system's API endpoints.
 """
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -25,4 +26,4 @@ app.add_middleware(
 app.include_router(inventory.router, prefix="/api/v1/inventory")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
