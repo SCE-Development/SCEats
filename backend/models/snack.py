@@ -12,12 +12,20 @@ class Snack(BaseModel):
     sku: str
     name: Optional[str] = None
     quantity: int
+    price: float
+    description: Optional[str] = None
+    category: Optional[str] = None
+    photo_url: Optional[str] = None
 
 # Request model for creating a new snack
 class SnackCreateSchema(BaseModel):
     sku: str
     quantity: Optional[int] = None
-    
+    price: float
+    description: Optional[str] = None
+    category: Optional[str] = None
+    photo_url: Optional[str] = None
+
 # Request model for updating an existing snack
 class SnackUpdateSchema(BaseModel):
     name: str

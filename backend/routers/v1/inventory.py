@@ -56,7 +56,6 @@ async def create_bulk_route(request:BulkSnackCreate):
     
     try:
         bulk_items = create_bulk_items(request.items)
-
         return BulkSnackResponse(
             success=True,
             items=bulk_items,

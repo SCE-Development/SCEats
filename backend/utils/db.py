@@ -11,7 +11,7 @@ The application uses SQLite for data storage, with the Snack model for data vali
 """
 import os
 import sqlite3
-from models.snack import Snack, SnackCreateSchema, SnackUpdateSchema,BulkSnackCreate,BulkSnackResponse
+from models.snack import Snack, SnackCreateSchema, SnackUpdateSchema,BulkSnackCreate
 from typing import List
 
 def get_db_connection(db_file_path:str="data/db.sqlite3"):
@@ -24,10 +24,31 @@ def get_db_connection(db_file_path:str="data/db.sqlite3"):
 def init_db(db_file_path: str = "data/db.sqlite3"):
     """Initialize the database with schema"""
     os.makedirs(os.path.dirname(db_file_path), exist_ok=True)
-    with open('data/schema.sql') as f:
-        schema = f.read()
     with get_db_connection() as conn:
-        conn.executescript(schema)
+        cursor = conn.cursor()
+
+        # Check if the 'snacks' table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='snacks';")
+        table_exists = cursor.fetchone()
+
+        if table_exists:
+            # Check for missing columns and add them if necessary
+            cursor.execute("PRAGMA table_info(snacks);")
+            columns = [column[1] for column in cursor.fetchall()]
+
+            if 'price' not in columns:
+                cursor.execute("ALTER TABLE snacks ADD COLUMN price DECIMAL(4,2) NOT NULL DEFAULT 0.00;")
+            if 'description' not in columns:
+                cursor.execute("ALTER TABLE snacks ADD COLUMN description TEXT;")
+            if 'category' not in columns:
+                cursor.execute("ALTER TABLE snacks ADD COLUMN category TEXT;")
+            if 'photo_url' not in columns:
+                cursor.execute("ALTER TABLE snacks ADD COLUMN photo_url TEXT;")
+        else:
+            # If the table doesn't exist, create it using the schema file
+            with open('data/schema.sql') as f:
+                schema = f.read()
+            conn.executescript(schema)
 
 
 def get_inventory() -> list[Snack]:
@@ -66,10 +87,20 @@ def create_snack(snack: SnackCreateSchema) -> Snack:
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO snacks (sku, name, quantity)
-            VALUES (?, ?, ?)
+            INSERT INTO snacks 
+                (sku, name, quantity, price, description, category, photo_url)
+            VALUES 
+                (?, ?, ?, ?, ?, ?, ?)
             RETURNING *
-        """, (snack.sku, snack.name, snack.quantity if snack.quantity is not None else 1))
+        """, (
+            snack.sku, 
+            snack.name, 
+            snack.quantity if snack.quantity is not None else 1, 
+            snack.price, 
+            snack.description, 
+            snack.category, 
+            snack.photo_url
+        ))
         record = cursor.fetchone()
         return Snack(**record)
 
@@ -80,10 +111,24 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE snacks 
-            SET name = ?, quantity = ?
+            SET 
+                name = ?, 
+                quantity = ?, 
+                price = ?, 
+                description = ?, 
+                category = ?, 
+                photo_url = ?       
             WHERE sku = ?
             RETURNING *
-        """, (updates.name, updates.quantity, sku))
+        """, (
+            updates.name, 
+            updates.quantity, 
+            updates.price, 
+            updates.description, 
+            updates.category, 
+            updates.photo_url, 
+            sku
+        ))
         record = cursor.fetchone()
         return Snack(**record)
 
@@ -94,10 +139,10 @@ def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
     with get_db_connection() as conn:
         cursor=conn.cursor()
 
-        snack_data=[(snack.sku,snack.quantity) for snack in bulk_snacks] 
+        snack_data=[(snack.sku,snack.quantity, snack.price,snack.description,snack.category, snack.photo_url) for snack in bulk_snacks] 
         query="""            
-                        INSERT INTO snacks (sku,quantity,name)
-                        VALUES (?, ?, '');
+                        INSERT INTO snacks (sku,quantity,name,price,description,category,photo_url)
+                        VALUES (?, ?, '',?,?,?,?);
                         """
         
         cursor.executemany(query,snack_data)
@@ -105,13 +150,13 @@ def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
         # Build the placeholders for the IN clause
         sku_placeholders = ', '.join('?' for _ in snack_data)
 
-        select_query = f"SELECT sku, quantity, name FROM snacks WHERE sku IN ({sku_placeholders})"
+        select_query = f"SELECT sku, quantity, name,price,description,category,photo_url FROM snacks WHERE sku IN ({sku_placeholders})"
 
         cursor.execute(select_query, tuple([snack[0] for snack in snack_data]))
 
         records = cursor.fetchall()  # fetchall() to get all rows inserted
-
-        return [Snack(sku=sku,quantity=quantity,name=name) for (sku,quantity,name) in records]
+        return [Snack(sku=sku,quantity=quantity,name=name, price=price,description=description,category=category,photo_url=photo_url) for 
+                (sku,quantity,name,price,description,category,photo_url) in records]
 
 
 # Initialize the database and create tables
