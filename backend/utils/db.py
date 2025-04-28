@@ -11,7 +11,8 @@ The application uses SQLite for data storage, with the Snack model for data vali
 """
 import os
 import sqlite3
-from models.snack import Snack, SnackCreateSchema, SnackUpdateSchema
+from models.snack import Snack, SnackCreateSchema, SnackUpdateSchema,BulkSnackCreate
+from typing import List
 from utils.exceptions import DatabaseError, ConnectionError, RecordNotFoundError, DuplicateRecordError, DatabaseInitError
 
 def get_db_connection(db_file_path:str="data/db.sqlite3"):
@@ -50,13 +51,33 @@ def init_db(db_file_path: str = "data/db.sqlite3"):
     """
     try:
         os.makedirs(os.path.dirname(db_file_path), exist_ok=True)
-        with open('data/schema.sql') as f:
-            schema = f.read()
         with get_db_connection() as conn:
-            conn.executescript(schema)
+            cursor = conn.cursor()
+
+            # Check if the 'snacks' table exists
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='snacks';")
+            table_exists = cursor.fetchone()
+
+            if table_exists:
+                # Check for missing columns and add them if necessary
+                cursor.execute("PRAGMA table_info(snacks);")
+                columns = [column[1] for column in cursor.fetchall()]
+
+                if 'price' not in columns:
+                    cursor.execute("ALTER TABLE snacks ADD COLUMN price DECIMAL(4,2) NOT NULL DEFAULT 0.00;")
+                if 'description' not in columns:
+                    cursor.execute("ALTER TABLE snacks ADD COLUMN description TEXT;")
+                if 'category' not in columns:
+                    cursor.execute("ALTER TABLE snacks ADD COLUMN category TEXT;")
+                if 'photo_url' not in columns:
+                    cursor.execute("ALTER TABLE snacks ADD COLUMN photo_url TEXT;")
+            else:
+                # If the table doesn't exist, create it using the schema file
+                with open('data/schema.sql') as f:
+                    schema = f.read()
+                conn.executescript(schema)
     except (sqlite3.Error, DatabaseError, ConnectionError, DatabaseInitError)  as e:
         raise DatabaseInitError(f"Failed to initialize database: {str(e)}")
-
 
 
 def get_inventory() -> list[Snack]:
@@ -235,6 +256,59 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
     except Exception as e:
         raise DatabaseError(f"Database error when updating snack {sku}: {str(e)}")
 
+
+
+
+# Bulk Processing function
+def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
+    """Create a Bulk of snacks in the database"""
+    with get_db_connection() as conn:
+        cursor=conn.cursor()
+
+        snack_data=[(snack.sku,snack.quantity, snack.price,snack.description,snack.category, snack.photo_url) for snack in bulk_snacks] 
+        query="""            
+                        INSERT INTO snacks (sku,quantity,name,price,description,category,photo_url)
+                        VALUES (?, ?, '',?,?,?,?);
+                        """
+        
+        cursor.executemany(query,snack_data)
+    
+        # Build the placeholders for the IN clause
+        sku_placeholders = ', '.join('?' for _ in snack_data)
+
+        select_query = f"SELECT sku, quantity, name,price,description,category,photo_url FROM snacks WHERE sku IN ({sku_placeholders})"
+
+        cursor.execute(select_query, tuple([snack[0] for snack in snack_data]))
+
+        records = cursor.fetchall()  # fetchall() to get all rows inserted
+        return [Snack(sku=sku,quantity=quantity,name=name, price=price,description=description,category=category,photo_url=photo_url) for 
+                (sku,quantity,name,price,description,category,photo_url) in records]
+
+
+# Bulk Processing function
+def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
+    """Create a Bulk of snacks in the database"""
+    with get_db_connection() as conn:
+        cursor=conn.cursor()
+
+        snack_data=[(snack.sku,snack.quantity, snack.price,snack.description,snack.category, snack.photo_url) for snack in bulk_snacks] 
+        query="""            
+                        INSERT INTO snacks (sku,quantity,name,price,description,category,photo_url)
+                        VALUES (?, ?, '',?,?,?,?);
+                        """
+        
+        cursor.executemany(query,snack_data)
+    
+        # Build the placeholders for the IN clause
+        sku_placeholders = ', '.join('?' for _ in snack_data)
+
+        select_query = f"SELECT sku, quantity, name,price,description,category,photo_url FROM snacks WHERE sku IN ({sku_placeholders})"
+
+        cursor.execute(select_query, tuple([snack[0] for snack in snack_data]))
+
+        records = cursor.fetchall()  # fetchall() to get all rows inserted
+        return [Snack(sku=sku,quantity=quantity,name=name, price=price,description=description,category=category,photo_url=photo_url) for 
+                (sku,quantity,name,price,description,category,photo_url) in records]
 
 
 # Initialize the database and create tables
