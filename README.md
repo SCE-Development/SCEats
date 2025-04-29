@@ -1,10 +1,8 @@
 # SCEats
 
-### SCE's snack inventory management
+SCE's snack inventory management
 
----
-
-## Technology Stack
+## Project Structure
 
 ### Frontend
 
@@ -13,20 +11,36 @@
 ### Backend
 
 - Python
-- SQL
+- sqlite3
   - Purpose: Maages dstructured data storage in relational database.
   - usage: Stores all snack-related information.
   - Benefit: ensures data consistency, efficient querying, and relational integrity.
 - FastAPI
+
   - Purpose: A modern, high performance web framework for building APIs
   - Features Used:
     - CorsMiddleware: Automaticaly enables cross-origin requests, which is essential for frontend-bakcend communication in web apps.
   - Benefit: Combines performance with developer-friendly features like automatic validation and interactive API docs (Swagger UI, ReDoc)
   - Ability to process several requests without blocking due to support for asynchronous programming.
 
+### File structure
+
+- /backend
+  - /data
+    - creates structured database tables for snacks
+  - /models
+    - create data models for Inventory API responses using Pydantic
+    - create several data models for snack related data using Pydantic
+  - /routes
+    - All routes included within /v1/inventory.py
+    - /test creates reusable tests to set up API calling, setting up DB, etc. Uses PyTest
+  - /utils
+    - /db.py Utility functions that are called by the routes
+  - /main.py Sets up starting point for FastAPI application
+
 ## Backend Documentation
 
-### Routes (haven't included error codes)
+### Routes (haven't included error codes, calls Utility functions)
 
 #### GET /
 
@@ -193,7 +207,62 @@ If the snack is not found:
 }
 ```
 
+#### POST /snacks/bulk
+
+Description:
+Deletes the snack identified by sku.
+
+Calls:
+delete_snack(sku) – Opens a database connection, finds the snack with the given sku, and deletes it.
+
+Request:
+
+Path Parameter: sku (string) – The SKU of the snack to delete.
+
+Response:
+
+```
+{
+  "sku": "CH001",
+  "name": "Chips",
+  "quantity": 25,
+  "price": 1.99,
+  "description": "Crunchy and salty",
+  "category": "Snacks",
+  "photo_url": "https://example.com/chips.png"
+}
+```
+
+If the snack is not found:
+
+```
+{
+  "detail": "Snack not found"
+}
+```
+
+#### DELETE /metrics
+
+Description:
+WIP?
+
+Calls:
+
+Request:
+
+Response:
+
+```
+
+```
+
+```
+
+```
+
 ### Database Schema
+
+Uses sqlite3
 
 Table: snacks
 Stores information about snack item, including product details, quantity, pricing, and optional metadata like category and photo.
@@ -208,13 +277,22 @@ Stores information about snack item, including product details, quantity, pricin
 | `category`    | `TEXT`         | Classification like "chips", "candy", etc.                    | Optional              |
 | `photo_url`   | `TEXT`         | URL pointing to a photo of the snack.                         | Optional              |
 
-### Utility functions
-
 ?
 
 ## API Documentation
 
+- pydantic
+  - for data validation and serialization.
+- fastAPI
+  - Provides gateway for database to be accessed by the user.
+- Promentheus client
+  - Provide data visualization, powerful querying, and more metric insights
+
 ## Setup Guide
+
+### How to run the frontend
+
+- No frontend?
 
 ### How to run the backend
 
@@ -228,10 +306,12 @@ Stores information about snack item, including product details, quantity, pricin
 
 ## Deployment Documentation
 
+Not deployed?
+
 ### Process
 
 ?
 
 ### CI/CD Pipline
 
-?
+Not deployed?
