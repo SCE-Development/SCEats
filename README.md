@@ -279,14 +279,19 @@ Stores information about snack item, including product details, quantity, pricin
 
 ?
 
-## API Documentation
+## API Technology Stack
 
-- pydantic
-  - for data validation and serialization.
-- fastAPI
-  - Provides gateway for database to be accessed by the user.
-- Promentheus client
-  - Provide data visualization, powerful querying, and more metric insights
+Pydantic: Handles data validation and serialization for API requests and responses.
+
+FastAPI: The web framework for defining and serving the API endpoints.
+
+Uvicorn: Runs the FastAPI app as an ASGI server with high performance.
+
+SQLite: Lightweight, file-based database for storing snack inventory data.
+
+Pytest: Framework for automated testing to ensure API reliability.
+
+Prometheus Client: Collects metrics for monitoring performance and health.
 
 ## Setup Guide
 
