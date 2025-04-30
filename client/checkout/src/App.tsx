@@ -8,9 +8,6 @@ function App() {
   return (
     <>
       < Display />
-      {/* <div className='text-3xl font-bold'>
-        Pending for changes...
-      </div> */}
     </>
   )
 }
