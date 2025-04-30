@@ -19,6 +19,7 @@ const CheckoutPage = () => {
   const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
   const [items, setItems] = useState<Item[]>([]);
   const [newItem, setNewItem] = useState<Item>({ name: "", quantity: 1, price: 0 });
+  const [addItemError, setAddItemError] = useState("");
 
   const calculateTotal = () => {
     return items.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -53,12 +54,17 @@ const CheckoutPage = () => {
   };
 
   const handleAddItem = () => {
-    if (newItem.name && newItem.quantity > 0) {
+    if (!newItem.name.trim()) {
+      setAddItemError("Please enter an item name");
+      return;
+    }
+    if (newItem.quantity > 0) {
       // Random price between $5 and $25
       const randomPrice = Math.floor(Math.random() * 20) + 5; 
       setItems([...items, { ...newItem, price: randomPrice }]);
       setNewItem({ name: "", quantity: 1, price: 0 });
       setShowAddItemModal(false);
+      setAddItemError("");
     }
   };
 
@@ -257,10 +263,18 @@ const CheckoutPage = () => {
                 <input
                   type="text"
                   placeholder="Enter item name"
-                  className="w-full p-4 rounded-2xl border border-gray-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 text-gray-700 text-lg transition-all duration-200 bg-white/50 backdrop-blur-sm shadow-sm"
+                  className={`w-full p-4 rounded-2xl border ${
+                    addItemError ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200" : "border-gray-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                  } text-gray-600 text-lg transition-all duration-200 bg-white/50 backdrop-blur-sm shadow-sm`}
                   value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  onChange={(e) => {
+                    setNewItem({ ...newItem, name: e.target.value });
+                    setAddItemError("");
+                  }}
                 />
+                {addItemError && (
+                  <p className="text-red-500 text-sm mt-1">{addItemError}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -317,20 +331,7 @@ const CheckoutPage = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999] flex items-center justify-center">
           <div className="bg-white rounded-2xl p-8 w-96 text-center shadow-2xl transform transition-all duration-300 animate-fade-in">
             <div className="flex justify-center mb-6">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="h-16 w-16 text-red-500 animate-pulse"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
-                />
-              </svg>
+              <Trash2 className="h-16 w-16 text-red-500 animate-pulse" />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Are you sure you want to cancel?</h2>
             <div className="flex justify-center space-x-6">
