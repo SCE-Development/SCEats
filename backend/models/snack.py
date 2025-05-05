@@ -20,7 +20,8 @@ class Snack(BaseModel):
 # Request model for creating a new snack
 class SnackCreateSchema(BaseModel):
     sku: str
-    quantity: Optional[int] = None
+    name: Optional[str] = "snack"
+    quantity: Optional[int] = 1
     price: float
     description: Optional[str] = None
     category: Optional[str] = None
@@ -28,8 +29,12 @@ class SnackCreateSchema(BaseModel):
 
 # Request model for updating an existing snack
 class SnackUpdateSchema(BaseModel):
-    name: str
-    quantity: int
+    name: Optional[str] = None
+    quantity: Optional[int] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    photo_url: Optional[str] = None
 
 class BulkSnackCreate(BaseModel):
     items:List[SnackCreateSchema]

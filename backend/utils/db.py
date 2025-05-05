@@ -95,7 +95,7 @@ def create_snack(snack: SnackCreateSchema) -> Snack:
         """, (
             snack.sku, 
             snack.name, 
-            snack.quantity if snack.quantity is not None else 1, 
+            snack.quantity, 
             snack.price, 
             snack.description, 
             snack.category, 
@@ -109,6 +109,22 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
     """Updates an existing snack in the database"""
     with get_db_connection() as conn:
         cursor = conn.cursor()
+        
+        # First, get the current snack data
+        cursor.execute("SELECT * FROM snacks WHERE sku = ?", (sku,))
+        current_snack = cursor.fetchone()
+        
+        if not current_snack:
+            raise ValueError(f"Snack with SKU {sku} not found")
+        
+        # Use provided values or fall back to current values
+        name = updates.name if updates.name is not None else current_snack['name']
+        quantity = updates.quantity if updates.quantity is not None else current_snack['quantity']
+        price = updates.price if updates.price is not None else current_snack['price']
+        description = updates.description if updates.description is not None else current_snack['description']
+        category = updates.category if updates.category is not None else current_snack['category']
+        photo_url = updates.photo_url if updates.photo_url is not None else current_snack['photo_url']
+        
         cursor.execute("""
             UPDATE snacks 
             SET 
@@ -121,12 +137,12 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
             WHERE sku = ?
             RETURNING *
         """, (
-            updates.name, 
-            updates.quantity, 
-            updates.price, 
-            updates.description, 
-            updates.category, 
-            updates.photo_url, 
+            name, 
+            quantity, 
+            price, 
+            description, 
+            category, 
+            photo_url, 
             sku
         ))
         record = cursor.fetchone()
