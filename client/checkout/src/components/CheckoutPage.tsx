@@ -28,9 +28,14 @@ const CheckoutPage = () => {
   const handleClick = (buttonType: "cash" | "venmo") => {
     setClickedButton(buttonType);
     setTimeout(() => setClickedButton(null), 300);
+    if (buttonType === "cash") {
+      setTimeout(() => setShowCashConfirmModal(true), 400);
+    } else if (buttonType === "venmo") {
+      setTimeout(() => setShowVenmoModal(true), 400);
+    }
   };
 
-  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>, buttonType: "continue" | "cancel") => {
+  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>, buttonType: "cancel") => {
     const rect = e.currentTarget.getBoundingClientRect();
     setRipplePosition({
       x: e.clientX - rect.left,
@@ -40,17 +45,13 @@ const CheckoutPage = () => {
     setTimeout(() => setClickedButton(null), 300);
     if (buttonType === "cancel") {
       setTimeout(() => setShowCancelModal(true), 400);
-    } else if (buttonType === "continue" && paymentMethod === "venmo") {
-      setTimeout(() => setShowVenmoModal(true), 400);
-    } else if (buttonType === "continue" && paymentMethod === "cash") {
-      setTimeout(() => setShowCashConfirmModal(true), 400);
     }
   };
 
   const handleCancel = () => {
-    setPaymentMethod(null);     // Reset payment method
-    setItems([]);              // Clear all items
-    setShowCancelModal(false);  // Close the modal
+    setPaymentMethod(null);     
+    setItems([]);              
+    setShowCancelModal(false);  
   };
 
   const handleAddItem = () => {
@@ -91,6 +92,7 @@ const CheckoutPage = () => {
           alt="SCE Logo" 
           className="absolute top-0 left-0 h-24 w-auto ml-6 mt-4 animate-pulse-subtle"
         />
+        
         {/* Checkout Box */}
         <div className="relative rounded-4xl bg-gradient-to-br from-gray-900/50 to-gray-900/30 border-2 border-sky-500/30 p-8 text-white w-full lg:w-1/2 flex flex-col h-[calc(100vh-10rem)] backdrop-blur-sm shadow-[0_0_25px_rgba(56,189,248,0.1)] overflow-hidden">
           <div className="flex items-center justify-between mb-6">
@@ -199,27 +201,6 @@ const CheckoutPage = () => {
             {/* Cancel and Continue Buttons */}
             {paymentMethod && (
               <div className="mt-2 flex justify-center gap-6 pt-6">
-                <button
-                  className={`group relative inline-flex items-center justify-center px-10 py-3 mb-2 me-2 overflow-hidden text-sm font-medium text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-[0_0_25px_rgba(56,189,248,0.5)] animate-pulse-glow-blue ${
-                    clickedButton === "continue" ? "scale-98 shadow-[0_0_50px_rgba(56,189,248,0.7)]" : ""
-                  }`}
-                  onClick={(e) => handleButtonClick(e, "continue")}
-                >
-                  <div className="absolute inset-0 bg-sky-500 rounded-xl transition-all duration-300 group-hover:bg-sky-600" />
-                  <div className="absolute inset-0 bg-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div 
-                    className="absolute w-4 h-4 bg-white rounded-full opacity-0 transform scale-0 transition-all duration-300"
-                    style={{
-                      left: ripplePosition.x,
-                      top: ripplePosition.y,
-                      transform: clickedButton === "continue" ? "scale(25)" : "scale(0)",
-                      opacity: clickedButton === "continue" ? "0.2" : "0"
-                    }}
-                  />
-                  <span className={`relative z-10 text-xl font-semibold transition-all duration-300 group-hover:tracking-wider ${clickedButton === "continue" ? "animate-pulse" : ""}`}>
-                    CONTINUE WITH {paymentMethod === "cash" ? "CASH" : "VENMO"}
-                  </span>
-                </button>
                 <button
                   className={`group relative inline-flex items-center justify-center px-10 py-3 mb-2 me-2 overflow-hidden text-sm font-medium text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-[0_0_25px_rgba(239,68,68,0.5)] animate-pulse-glow-red ${
                     clickedButton === "cancel" ? "scale-98 shadow-[0_0_50px_rgba(239,68,68,0.7)]" : ""
