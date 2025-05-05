@@ -1,0 +1,12 @@
+services:
+  backend:
+    build: .
+    volumes:
+      - snacks-data:/app/data
+    ports:
+      - "8000:8000"
+
+volumes:
+  snacks-data:
+
+
