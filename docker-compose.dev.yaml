@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - snacks-data:/app/data
+  frontend:
+    build:
+      dockerfile: ./Dockerfile.dev
+      context: ./client
+  sceats-nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/nginx.conf
+    ports:
+      - "3001:80"
+
+volumes:
+  snacks-data:
