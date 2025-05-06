@@ -1,10 +1,14 @@
 services:
   backend:
-    build: .
+    build: ./backend
     volumes:
       - snacks-data:/app/data
     ports:
       - "8000:8000"
+  frontend:
+    build: ./client/checkout
+    ports:
+      - "3000:3000"
 
 volumes:
   snacks-data:
