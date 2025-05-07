@@ -17,3 +17,8 @@ services:
 
 volumes:
   snacks-data:
+
+networks: 
+  default:
+    external: 
+      name: poweredge
