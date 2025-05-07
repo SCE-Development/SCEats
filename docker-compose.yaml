@@ -12,7 +12,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "80:80"
+      - "6969:80"
 
 volumes:
   snacks-data:
