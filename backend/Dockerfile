@@ -24,8 +24,5 @@ RUN python -m pip install -r requirements.txt --no-cache-dir
 # Copy the source code into the container.
 COPY . .
 
-# Expose the port that the application listens on.
-EXPOSE 8000
-
 # Run the application.
 CMD ["python", "main.py"]
