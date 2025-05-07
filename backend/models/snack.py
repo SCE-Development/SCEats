@@ -43,3 +43,15 @@ class BulkSnackResponse(BaseModel):
     success:bool
     items:Optional[List[Snack]] = None
     error:Optional[str] = None
+
+class Purchase(BaseModel):
+    sku:str
+    quantity:int
+
+class PurchaseRequest(BaseModel):
+    purchase_requests:List[Purchase]
+
+class PurchaseResponse(BaseModel):
+    success:bool
+    message:str
+    purchase_requests:List[Purchase]

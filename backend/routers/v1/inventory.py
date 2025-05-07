@@ -11,6 +11,8 @@ All routes are prefixed with /api/v1/inventory
 """
 from fastapi import APIRouter
 from models.snack import (
+    PurchaseRequest,
+    PurchaseResponse,
     Snack,
     SnackCreateSchema,
     SnackUpdateSchema,
@@ -56,6 +58,13 @@ async def create_snack_route(snack: SnackCreateSchema):
 @router.put("/snacks/{sku}", response_model=Snack)
 async def update_snack_route(sku: str, updates: SnackUpdateSchema):
     return update_snack(sku, updates)
+
+@router.post("/snacks/purchase", response_model=PurchaseResponse)
+async def purchase_snack_route(request:PurchaseRequest):
+    for purchase_request in request.purchase_requests:
+        snack=get_snack(purchase_request.sku)
+        update_snack(purchase_request.sku, SnackUpdateSchema(quantity=max(0,snack.quantity - purchase_request.quantity)))
+    return PurchaseResponse(success=True,message="Purchase successful",purchase_requests=request.purchase_requests) 
 
 @router.delete("/snacks/{sku}", response_model=Snack)
 async def delete_snack_route(sku: str):

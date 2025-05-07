@@ -5,6 +5,9 @@ export interface Item {
   name: string;
   quantity: number;
   price: number;
+  category: string;
+  description: string;  
+  photo_url: string;
 }
 
 interface ItemProps {
