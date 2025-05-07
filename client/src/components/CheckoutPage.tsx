@@ -3,6 +3,7 @@ import OrderSummary from "./OrderSummary";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import VenmoModal from "./modals/VenmoModal";
 import CashModal from "./modals/CashModal";
+import ItemNotFoundModal from "./modals/ItemNotFoundModal";
 
 import { Item } from "./Item";
 
@@ -10,43 +11,55 @@ const CheckoutPage = () => {
   // State
   const [items, setItems] = useState<Map<string, Item>>(new Map());
   const [sku, setSku] = useState<string>("");
+  const [notFoundSku, setNotFoundSku] = useState<string>("");
   
   // Modals
   const [showVenmoModal, setShowVenmoModal] = useState(false);
   const [showCashModal, setShowCashModal] = useState(false);
+  const [showItemNotFoundModal, setShowItemNotFoundModal] = useState(false);
 
   // Function to add item by SKU, wrapped in useCallback
   const addItemBySku = useCallback((skuCode: string) => {
-    
-    // TODO: Check if item exists in database
-    // TODO: If item exists, increment quantity
+    // If item already exists, increment quantity
+    if (items.has(skuCode)) {
+      setItems(prev => {
+        const newItems = new Map(prev);
+        const item = newItems.get(skuCode)!;
+        newItems.set(skuCode, { ...item, quantity: item.quantity + 1 });
+        return newItems;
+      });
+      return;
+    }
 
-    setItems(prevItems => {
-      const newItems = new Map(prevItems);
-      
-      if (newItems.has(skuCode)) {
-        // If item exists, increment quantity
-        const existingItem = newItems.get(skuCode)!;
-        newItems.set(skuCode, {
-          ...existingItem,
-          quantity: existingItem.quantity + 1
+    // Add item if it exists in the database
+    fetch(`/api/v1/inventory/snacks/${skuCode}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then(data => {
+        setItems(prev => {
+          const newItems = new Map(prev);
+          newItems.set(skuCode, {
+            sku: data.sku,
+            name: data.name,
+            quantity: 1,
+            price: data.price,
+            description: data.description,
+            category: data.category,
+            photo_url: data.photo_url,
+          });
+          return newItems;
         });
-      } else {
-        // If new item, create it
-        const itemName = `Item ${skuCode}`;
-        const randomPrice = Math.floor(Math.random() * 20) + 5;
-        
-        newItems.set(skuCode, {
-          sku: skuCode,
-          name: itemName,
-          quantity: 1,
-          price: randomPrice
-        });
-      }
-      
-      return newItems;
-    });
-  }, []);
+      })
+      .catch(() => {
+        setNotFoundSku(skuCode);
+        setShowItemNotFoundModal(true);
+        setSku("");
+      });
+  }, [items]);
 
   // Add keyboard event listener for SKU input
   useEffect(() => {
@@ -109,10 +122,30 @@ const CheckoutPage = () => {
   };
 
   const handleCheckoutComplete = () => {
-    setItems(new Map());
-    setShowCashModal(false);
-    setShowVenmoModal(false);
-    setSku("");
+    fetch("/api/v1/inventory/snacks/purchase", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        purchase_requests: Array.from(items.values()).map(item => ({
+          sku: item.sku,
+          quantity: item.quantity,
+        })),
+      }),
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.json();
+    }).then(() => {
+      setItems(new Map());
+      setShowCashModal(false);
+      setShowVenmoModal(false);
+      setSku("");
+    }).catch(error => {
+      console.error("Error checking out:", error);
+    });
   };
 
   return (
@@ -168,6 +201,16 @@ const CheckoutPage = () => {
           totalAmount={calculateTotal()}
           onClose={() => setShowCashModal(false)}
           onComplete={handleCheckoutComplete}
+        />
+      )}
+
+      {showItemNotFoundModal && (
+        <ItemNotFoundModal
+          sku={notFoundSku}
+          onClose={() => {
+            setNotFoundSku("");
+            setShowItemNotFoundModal(false);
+          }}
         />
       )}
     </>

@@ -14,8 +14,3 @@ services:
 
 volumes:
   snacks-data:
-
-networks: 
-  default:
-    external: 
-      name: sce
