@@ -32,7 +32,7 @@ const CheckoutPage = () => {
     }
 
     // Add item if it exists in the database
-    fetch(`/api/v1/inventory/snacks/${skuCode}`)
+    fetch(`${import.meta.env.BASE_URL}api/v1/inventory/snacks/${skuCode}`)
       .then(response => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -122,7 +122,7 @@ const CheckoutPage = () => {
   };
 
   const handleCheckoutComplete = () => {
-    fetch("/api/v1/inventory/snacks/purchase", {
+    fetch(`${import.meta.env.BASE_URL}api/v1/inventory/snacks/purchase`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
