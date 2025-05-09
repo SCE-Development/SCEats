@@ -27,7 +27,7 @@ const AdminCheckout = () => {
     }
 
     // Check if item exists in our database
-    fetch(`${import.meta.env.BASE_URL}api/v1/inventory/snacks/${skuCode}`)
+    fetch(`${import.meta.env.BASE_URL}/api/v1/inventory/snacks/${skuCode}`)
       .then(response => {
         if (response.ok) {
           return response.json();
@@ -138,7 +138,7 @@ const AdminCheckout = () => {
   const handleSaveToInventory = async () => {
     const itemsArray = Array.from(items.values());
     try {
-      const response = await fetch(`${import.meta.env.BASE_URL}api/v1/inventory/snacks/bulk`, {
+      const response = await fetch(`${import.meta.env.BASE_URL}/api/v1/inventory/snacks/bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

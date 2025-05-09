@@ -38,5 +38,5 @@ const prodConfig = {
 }
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {
-  return command === 'serve' ? prodConfig : devConfig
+  return command === 'serve' ? devConfig : prodConfig
 })

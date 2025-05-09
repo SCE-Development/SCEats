@@ -7,14 +7,14 @@ const AdminInventoryGrid = () => {
   const [editingSnack, setEditingSnack] = useState<Item | null>(null);
 
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}api/v1/inventory/`)
+    fetch(`${import.meta.env.BASE_URL}/api/v1/inventory/`)
       .then(response => response.json())
       .then(data => setSnacks(data.snacks))
       .catch(error => console.error('Error fetching snacks:', error));
   }, []);
 
   const handleSave = (updatedSnack: Item) => {
-    fetch(`${import.meta.env.BASE_URL}api/v1/inventory/snacks/${updatedSnack.sku}`, {
+    fetch(`${import.meta.env.BASE_URL}/api/v1/inventory/snacks/${updatedSnack.sku}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ const AdminInventoryGrid = () => {
 
   const handleDelete = (sku: string) => {
     if (!confirm('Are you sure you want to delete this item?')) return;
-    fetch(`${import.meta.env.BASE_URL}api/v1/inventory/snacks/${sku}`, {
+    fetch(`${import.meta.env.BASE_URL}/api/v1/inventory/snacks/${sku}`, {
       method: 'DELETE'
     })
       .then(response => response.json())
