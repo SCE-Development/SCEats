@@ -18,7 +18,7 @@ const devConfig = {
         changeOrigin: true
       }
     },
-    allowedHosts: ['one.sce']
+    allowedHosts: 'all'
   }
 }
 
@@ -26,8 +26,16 @@ const devConfig = {
 const prodConfig = {
   ...baseConfig,
   base: '/eats',
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://one.sce',
+        changeOrigin: true
+      }
+    },
+    allowedHosts: 'all'
+  }
 }
-
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {
   return command === 'serve' ? devConfig : prodConfig
