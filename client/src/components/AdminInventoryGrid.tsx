@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Minus, Save, Trash2, Pencil } from 'lucide-react';
+import { Save, Trash2, Pencil } from 'lucide-react';
 import { Item } from './Item';
 
 const AdminInventoryGrid = () => {

@@ -18,7 +18,7 @@ const devConfig = {
         changeOrigin: true
       }
     },
-    allowedHosts: 'all'
+    allowedHosts: ['localhost', '127.0.0.1']
   }
 }
 
@@ -33,10 +33,10 @@ const prodConfig = {
         changeOrigin: true
       }
     },
-    allowedHosts: 'all'
+    allowedHosts: ['one.sce', 'localhost', '127.0.0.1']
   }
 }
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {
-  return command === 'serve' ? devConfig : prodConfig
+  return command === 'serve' ? prodConfig : devConfig
 })
