@@ -150,29 +150,43 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
 
 
 # Bulk Processing function
-def create_bulk_items(bulk_snacks:BulkSnackCreate) -> List[Snack]:
-    """Create a Bulk of snacks in the database"""
+def create_bulk_items(bulk_snacks: BulkSnackCreate) -> List[Snack]:
+    """Create or update a bulk of snacks in the database"""
     with get_db_connection() as conn:
-        cursor=conn.cursor()
+        cursor = conn.cursor()
 
-        snack_data=[(snack.sku,snack.quantity, snack.price,snack.description,snack.category, snack.photo_url) for snack in bulk_snacks] 
-        query="""            
-                        INSERT INTO snacks (sku,quantity,name,price,description,category,photo_url)
-                        VALUES (?, ?, '',?,?,?,?);
-                        """
-        
-        cursor.executemany(query,snack_data)
-    
-        # Build the placeholders for the IN clause
-        sku_placeholders = ', '.join('?' for _ in snack_data)
+        # First check which items exist
+        skus = [snack.sku for snack in bulk_snacks]
+        sku_placeholders = ', '.join('?' for _ in skus)
+        select_query = f"SELECT sku FROM snacks WHERE sku IN ({sku_placeholders})"
+        cursor.execute(select_query, skus)
+        existing_skus = {row[0] for row in cursor.fetchall()}
 
-        select_query = f"SELECT sku, quantity, name,price,description,category,photo_url FROM snacks WHERE sku IN ({sku_placeholders})"
+        # Handle updates for existing items
+        for snack in bulk_snacks:
+            if snack.sku in existing_skus:
+                cursor.execute("""
+                    UPDATE snacks 
+                    SET quantity = quantity + ?
+                    WHERE sku = ?
+                """, (snack.quantity, snack.sku))
 
-        cursor.execute(select_query, tuple([snack[0] for snack in snack_data]))
+        # Handle inserts for new items
+        new_snacks = [snack for snack in bulk_snacks if snack.sku not in existing_skus]
+        if new_snacks:
+            snack_data = [(snack.sku, snack.quantity or 1, snack.name, snack.price, 
+                          snack.description, snack.category, snack.photo_url) 
+                         for snack in new_snacks]
+            query = """            
+                INSERT INTO snacks (sku, quantity, name, price, description, category, photo_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?);
+            """
+            cursor.executemany(query, snack_data)
 
-        records = cursor.fetchall()  # fetchall() to get all rows inserted
-        return [Snack(sku=sku,quantity=quantity,name=name, price=price,description=description,category=category,photo_url=photo_url) for 
-                (sku,quantity,name,price,description,category,photo_url) in records]
+        # Fetch all items
+        cursor.execute(f"SELECT * FROM snacks WHERE sku IN ({sku_placeholders})", skus)
+        records = cursor.fetchall()
+        return [Snack(**record) for record in records]
 
 
 # Initialize the database and create tables

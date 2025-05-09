@@ -22,7 +22,7 @@ class SnackCreateSchema(BaseModel):
     sku: str
     name: Optional[str] = "snack"
     quantity: Optional[int] = 1
-    price: float
+    price: Optional[float] = None
     description: Optional[str] = None
     category: Optional[str] = None
     photo_url: Optional[str] = None
