@@ -3,8 +3,6 @@ services:
     build: ./backend
     volumes:
       - snacks-data:/app/data
-    ports:
-      - "6970:6970"
   frontend:
     build:
       dockerfile: ./Dockerfile
