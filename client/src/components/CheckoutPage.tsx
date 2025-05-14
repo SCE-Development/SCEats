@@ -152,7 +152,7 @@ const CheckoutPage = () => {
     <>
       <div className="flex flex-col lg:flex-row justify-between mx-7 mt-32 space-y-3 lg:space-y-0 lg:space-x-7 items-start min-h-[calc(100vh-10rem)]">
         <img 
-          src="/image/SCE-glow.png" 
+          src={`${import.meta.env.BASE_URL}/image/SCE-glow.png`}
           alt="SCE Logo" 
           className="absolute top-0 left-0 h-24 w-auto ml-6 mt-4 animate-pulse-subtle"
         />
