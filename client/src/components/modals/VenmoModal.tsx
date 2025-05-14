@@ -53,7 +53,7 @@ const VenmoModal = ({ totalAmount, onClose, onComplete }: VenmoModalProps) => {
           {/* QR Code */}
           <div className="bg-white/5 p-6 rounded-2xl border border-sky-500/30 transform transition-all duration-300 overflow-hidden shadow-xl shadow-sky-500/10">
             <img 
-              src="/image/venmoQR.png" 
+              src={`${import.meta.env.BASE_URL}/image/venmoQR.png`}
               alt="Venmo QR Code" 
               className="w-84 h-84 scale-100 transform-gpu"
             />
