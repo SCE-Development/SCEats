@@ -9,3 +9,6 @@
   - Windows: ```.\.venv\Scripts\activate```
   - Mac: ```source ./.venv/bin/activate```
 - Run ```python main.py```
+
+## how to run full app in dev
+- ```docker compose -f docker-compose.dev.yaml up```

@@ -29,15 +29,8 @@ from utils.db import (
     update_snack,
     create_bulk_items
 )
-from prometheus_client import generate_latest,Gauge,Counter
-router = APIRouter()
 
-purchase_counter=Counter("snack_purchase_count","Number of snacks purchased",["sku"])
-inventory_gauge=Gauge(
-    "inventory_snack_count",
-    "Total number of snacks item in the inventory",
-    ["sku"]
-)
+router = APIRouter()
 
 @router.get("/", response_model=InventoryResponse)
 async def get_inventory_route():
@@ -47,8 +40,6 @@ async def get_inventory_route():
 @router.get("/snacks/{sku}", response_model=Snack)
 async def get_snack_route(sku: str):
     snack = get_snack(sku)
-    inventory_gauge.labels(sku=snack.sku).set(snack.quantity)
-    purchase_counter.labels(sku=snack.sku).inc()
     return snack
 
 @router.post("/snacks", response_model=Snack)
@@ -72,9 +63,8 @@ async def delete_snack_route(sku: str):
 
 @router.post("/snacks/bulk", response_model=BulkSnackResponse) 
 async def create_bulk_route(request:BulkSnackCreate):
-    
     try:
-        bulk_items = create_bulk_items(request.items)
+        bulk_items = create_bulk_items(request)
         return BulkSnackResponse(
             success=True,
             items=bulk_items,
@@ -86,10 +76,3 @@ async def create_bulk_route(request:BulkSnackCreate):
             items=None,
             error=f"Error Processing bulk request:{str(e)}"
         )
-
-@router.get("/metrics")
-async def get_metrics():
-    """
-    Endpoint to expose Prometheus metrics
-    """
-    return generate_latest() 

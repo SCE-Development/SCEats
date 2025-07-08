@@ -156,14 +156,14 @@ def create_bulk_items(bulk_snacks: BulkSnackCreate) -> List[Snack]:
         cursor = conn.cursor()
 
         # First check which items exist
-        skus = [snack.sku for snack in bulk_snacks]
+        skus = [snack.sku for snack in bulk_snacks.items]
         sku_placeholders = ', '.join('?' for _ in skus)
         select_query = f"SELECT sku FROM snacks WHERE sku IN ({sku_placeholders})"
         cursor.execute(select_query, skus)
         existing_skus = {row[0] for row in cursor.fetchall()}
 
         # Handle updates for existing items
-        for snack in bulk_snacks:
+        for snack in bulk_snacks.items:
             if snack.sku in existing_skus:
                 cursor.execute("""
                     UPDATE snacks 
@@ -172,7 +172,7 @@ def create_bulk_items(bulk_snacks: BulkSnackCreate) -> List[Snack]:
                 """, (snack.quantity, snack.sku))
 
         # Handle inserts for new items
-        new_snacks = [snack for snack in bulk_snacks if snack.sku not in existing_skus]
+        new_snacks = [snack for snack in bulk_snacks.items if snack.sku not in existing_skus]
         if new_snacks:
             snack_data = [(snack.sku, snack.quantity or 1, snack.name, snack.price, 
                           snack.description, snack.category, snack.photo_url) 
