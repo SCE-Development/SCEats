@@ -35,31 +35,33 @@ router = APIRouter()
 
 # Prometheus metrics
 # track count of different types of snacks
-snack_count = prometheus_client.Gauge(
-    "snack_count",
+snack_gauge = prometheus_client.Gauge(
+    "snack_gauge",
     "Amount of snack types in inventory",
+    ["sku"],
 )
 
 # track count of purchases
 purchase_count = prometheus_client.Counter(
     "purchase_count",
     "Total number of snacks bought from inventory",
+    ["sku"],
 )
 
 @router.get("/", response_model=InventoryResponse)
 async def get_inventory_route():
     snacks = get_inventory()
-    snack_count.set(len(snacks)) # set the counter to the current number of snacks
     return { "snacks": snacks }
 
 @router.get("/snacks/{sku}", response_model=Snack)
 async def get_snack_route(sku: str):
     snack = get_snack(sku)
+    snack_gauge.labels(sku=snack.sku).set(snack.quantity)
     return snack
 
 @router.post("/snacks", response_model=Snack)
 async def create_snack_route(snack: SnackCreateSchema):
-    snack_count.inc()
+    snack_gauge.labels(sku=snack.sku).set(1) # default value, change later
     return create_snack(snack)
 
 @router.put("/snacks/{sku}", response_model=Snack)
@@ -71,12 +73,13 @@ async def purchase_snack_route(request:PurchaseRequest):
     for purchase_request in request.purchase_requests:
         snack=get_snack(purchase_request.sku)
         update_snack(purchase_request.sku, SnackUpdateSchema(quantity=max(0,snack.quantity - purchase_request.quantity)))
-        purchase_count.inc()
+        purchase_count.labels(sku=snack.sku).inc(purchase_request.quantity)
+        snack_gauge.labels(sku=snack.sku).dec(purchase_request.quantity) # now that stuff is bought, decrease inventory count
     return PurchaseResponse(success=True,message="Purchase successful",purchase_requests=request.purchase_requests) 
 
 @router.delete("/snacks/{sku}", response_model=Snack)
 async def delete_snack_route(sku: str):
-    snack_count.dec(1)
+    snack_gauge.remove(sku)
     return delete_snack(sku)
 
 @router.post("/snacks/bulk", response_model=BulkSnackResponse) 
