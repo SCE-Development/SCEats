@@ -61,7 +61,7 @@ async def get_snack_route(sku: str):
 
 @router.post("/snacks", response_model=Snack)
 async def create_snack_route(snack: SnackCreateSchema):
-    snack_gauge.labels(sku=snack.sku).set(1) # default value, change later
+    snack_gauge.labels(sku=snack.sku).set(snack.quantity)
     return create_snack(snack)
 
 @router.put("/snacks/{sku}", response_model=Snack)
@@ -97,3 +97,10 @@ async def create_bulk_route(request:BulkSnackCreate):
             items=None,
             error=f"Error Processing bulk request:{str(e)}"
         )
+    
+@router.get("/metrics")
+def get_metrics():
+    return PlainTextResponse(
+        media_type='text/plain',
+        content=prometheus_client.generate_latest()
+    )
