@@ -29,6 +29,8 @@ from utils.db import (
     update_snack,
     create_bulk_items
 )
+from prometheus_client import generate_latest
+from utils.db import snack_gauge, purchase_count
 
 router = APIRouter()
 
@@ -76,3 +78,10 @@ async def create_bulk_route(request:BulkSnackCreate):
             items=None,
             error=f"Error Processing bulk request:{str(e)}"
         )
+    
+@router.get("/metrics")
+def get_metrics():
+    return PlainTextResponse(
+        media_type='text/plain',
+        content=generate_latest()
+    )

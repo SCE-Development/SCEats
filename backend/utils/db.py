@@ -13,6 +13,22 @@ import os
 import sqlite3
 from models.snack import Snack, SnackCreateSchema, SnackUpdateSchema,BulkSnackCreate
 from typing import List
+import prometheus_client
+
+# Prometheus metrics
+# track count of different types of snacks
+snack_gauge = prometheus_client.Gauge(
+    "snack_gauge",
+    "Amount of snack types in inventory",
+    ["sku"],
+)
+
+# track count of purchases
+purchase_count = prometheus_client.Counter(
+    "purchase_count",
+    "Total number of snacks bought from inventory",
+    ["sku"],
+)
 
 def get_db_connection(db_file_path:str="data/db.sqlite3"):
     """Creates and returns a SQLite database connection"""
@@ -79,6 +95,7 @@ def delete_snack(sku: str) -> Snack:
             RETURNING *
         """, (sku,))
         record = cursor.fetchone()
+        snack_gauge.remove(sku)
         return Snack(**record)
         
 
@@ -102,6 +119,8 @@ def create_snack(snack: SnackCreateSchema) -> Snack:
             snack.photo_url
         ))
         record = cursor.fetchone()
+        snack = Snack(**record)
+        snack_gauge.labels(sku=snack.sku).set(snack.quantity)
         return Snack(**record)
 
 
@@ -124,6 +143,9 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
         description = updates.description if updates.description is not None else current_snack['description']
         category = updates.category if updates.category is not None else current_snack['category']
         photo_url = updates.photo_url if updates.photo_url is not None else current_snack['photo_url']
+
+        purchase_made = quantity < current_snack['quantity']
+        quantity_change = current_snack['quantity'] - quantity
         
         cursor.execute("""
             UPDATE snacks 
@@ -146,7 +168,11 @@ def update_snack(sku: str, updates: SnackUpdateSchema) -> Snack:
             sku
         ))
         record = cursor.fetchone()
-        return Snack(**record)
+        snack = Snack(**record)
+        if purchase_made:
+            purchase_count.labels(sku).inc(quantity_change)
+        snack_gauge.labels(sku).set(quantity)
+        return snack
 
 
 # Bulk Processing function
