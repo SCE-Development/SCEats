@@ -12,3 +12,5 @@
 
 ## how to run full app in dev
 - ```docker compose -f docker-compose.dev.yaml up```
+
+adarsh was here.
